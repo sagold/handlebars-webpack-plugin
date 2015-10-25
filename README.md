@@ -26,7 +26,15 @@ var webpackConfig = {
             // register custom helpers
             helpers: {
                 nameOfHbsHelper: Function.prototype
-            }
+            },
+
+            // hooks
+            onBeforeSetup: function (Handlebars) {},
+            onBeforeAddPartials: function (Handlebars, partialsMap) {},
+            onBeforeCompile: function (Handlebars, templateContent) {},
+            onBeforeRender: function (Handlebars, data) {},
+            onBeforeSave: function (Handlebars, resultHtml) {},
+            onDone: function (Handlebars) {}
         })
     ]
 }
