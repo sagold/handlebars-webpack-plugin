@@ -1,0 +1,30 @@
+{
+  "name": "handlebars-webpack-plugin",
+  "version": "0.0.1",
+  "description": "Renders your html-template on build time",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://sagold@github.com/sagold/handlebars-webpack-plugin.git"
+  },
+  "keywords": [
+    "webpack",
+    "plugin",
+    "handlebars",
+    "server"
+  ],
+  "author": "Sascha Goldhofer <noreply@saschagoldhofer.de> (https://github.com/sagold/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sagold/handlebars-webpack-plugin/issues"
+  },
+  "homepage": "https://github.com/sagold/handlebars-webpack-plugin",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "glob": "^5.0.15",
+    "handlebars": "^4.0.3"
+  }
+}
