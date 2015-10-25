@@ -11,6 +11,7 @@ Server-side template rendering using [Handlebars](http://handlebarsjs.com/).
 In your webpack config register and setup the handlebars plugin
 
 ```javascript
+var path = require("path");
 var HandlebarsPlugin = require("handlebars-webpack-plugin");
 
 var webpackConfig = {
@@ -24,9 +25,9 @@ var webpackConfig = {
             // filepath to result
             output: path.join(process.cwd(), "build", "index.html"),
             // data passed to main hbs template: `main-template(data)`
-            data: require("./app/data/data.json"),
+            data: require("./app/data/project.json"),
 
-            // globbed path to partials
+            // globbed path to partials, where folder/filename is unique
             partials: [
                  path.join(process.cwd(), "app", "src", "components", "*", "*.hbs")
             ],
@@ -45,7 +46,7 @@ var webpackConfig = {
             onDone: function (Handlebars) {}
         })
     ]
-}
+};
 ```
 
 Partial ids are registered by `parentFolder/filename` (without file extensions)
