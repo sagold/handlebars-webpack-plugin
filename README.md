@@ -1,3 +1,11 @@
+# Webpack handlebars plugin
+
+Server-side template rendering using [Handlebars](http://handlebarsjs.com/).
+
+
+`npm install handlebars-webpack-plugin --save-dev`
+
+
 ## Usage
 
 In your webpack config register and setup the handlebars plugin
