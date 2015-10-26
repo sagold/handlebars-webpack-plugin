@@ -16,7 +16,6 @@ function HandlebarsPlugin(options) {
 	this.outputFile = options.output;
 	this.entryFile = options.entry;
 	this.data = options.data || {};
-	this.partials = partialUtils.loadMap(Handlebars, options.partials);
 
     // register helpers
     Object.keys(options.helper || {}).forEach(function (helperId) {
@@ -26,7 +25,6 @@ function HandlebarsPlugin(options) {
 
 HandlebarsPlugin.prototype.apply = function (compiler) {
     var options = this.options;
-    var partials = this.partials;
     var data = this.data;
     var entryFile = this.entryFile;
     var outputFile = this.outputFile;
@@ -37,7 +35,10 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         var templateContent;
         var template;
         var result;
+        var partials;
 
+        // fetch paths to partials
+        partials = partialUtils.loadMap(Handlebars, options.partials);
 
         if (options.onBeforeAddPartials) {
             options.onBeforeAddPartials(Handlebars, partials);
