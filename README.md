@@ -1,6 +1,6 @@
 # Webpack handlebars plugin
 
-Server-side template rendering using [Handlebars](http://handlebarsjs.com/).
+> Server-side template rendering using [Handlebars](http://handlebarsjs.com/).
 
 
 `npm install handlebars-webpack-plugin --save-dev`
@@ -19,7 +19,6 @@ var webpackConfig = {
     plugins: [
 
         new HandlebarsPlugin({
-
             // path to main hbs template
             entry: path.join(process.cwd(), "app", "src", "index.hbs"),
             // filepath to result
