@@ -28,12 +28,13 @@ var webpackConfig = {
 
             // globbed path to partials, where folder/filename is unique
             partials: [
-                 path.join(process.cwd(), "app", "src", "components", "*", "*.hbs")
+                path.join(process.cwd(), "app", "src", "components", "*", "*.hbs")
             ],
 
             // register custom helpers
             helpers: {
-                nameOfHbsHelper: Function.prototype
+                nameOfHbsHelper: Function.prototype,
+                path.join(process.cwd(), "app", "helpers", "*.helper.js")
             },
 
             // hooks
