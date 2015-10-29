@@ -38,7 +38,8 @@ function HandlebarsPlugin(options) {
         if (typeof options.helper[helperId] === "string") {
             helpers = glob.sync(options.helper[helperId]);
             helpers.forEach(function (pathToHelper) {
-                addHelper(Handlebars, getHelperId(pathToHelper), self.readFile(pathToHelper));
+                addHelper(Handlebars, getHelperId(pathToHelper), require(pathToHelper));
+                self.addDependency(pathToHelper);
             });
 
         // functions
@@ -53,8 +54,8 @@ HandlebarsPlugin.prototype.readFile = function (filepath) {
     return fs.readFileSync(filepath, "utf-8");
 };
 
-HandlebarsPlugin.prototype.addDependencies = function (dependencies) {
-    this.fileDependencies = this.fileDependencies.concat(dependencies);
+HandlebarsPlugin.prototype.addDependency = function () {
+    this.fileDependencies.push.apply(this.fileDependencies, arguments);
 };
 
 HandlebarsPlugin.prototype.apply = function (compiler) {
@@ -79,7 +80,7 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         // register partials
         partialUtils.addMap(Handlebars, partials);
         // watch all partials for changes
-        self.addDependencies(Object.keys(partials).map(function (key) {return partials[key]; }) );
+        self.addDependency.apply(self, Object.keys(partials).map(function (key) {return partials[key]; }) );
 
         templateContent = self.readFile(entryFile, "utf-8");
 
