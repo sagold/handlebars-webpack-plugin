@@ -49,6 +49,8 @@ function HandlebarsPlugin(options) {
     });
 }
 
+HandlebarsPlugin.Handlebars = Handlebars;
+
 HandlebarsPlugin.prototype.readFile = function (filepath) {
     this.fileDependencies.push(filepath);
     return fs.readFileSync(filepath, "utf-8");
