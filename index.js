@@ -7,6 +7,11 @@ var partialUtils = require("./utils/partials");
 var Handlebars = require("handlebars");
 var glob = require("glob");
 
+
+// export Handlebars for easy access in helpers
+HandlebarsPlugin.Handlebars = Handlebars;
+
+
 function getHelperId(filepath) {
     var id = filepath.match(/\/([^\/]*).js$/).pop();
     return id.replace(/\.?helper\.?/, "");
@@ -31,7 +36,7 @@ function HandlebarsPlugin(options) {
 
     // register helpers
     var self = this;
-    Object.keys(options.helper || {}).forEach(function (helperId) {
+    Object.keys(options.helpers || options.helper || {}).forEach(function (helperId) {
         var helpers;
 
         // globbed paths
