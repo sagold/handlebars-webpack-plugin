@@ -13,6 +13,11 @@ function getPartialId(path) {
 
 function loadPartialsMap(Handlebars, partialsGlob) {
 	var partials = [];
+
+    if (partialsGlob == null) {
+        return {};
+    }
+
 	partialsGlob.forEach(function (partialGlob) {
 		partials = partials.concat(glob.sync(partialGlob));
 	});
