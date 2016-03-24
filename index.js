@@ -36,20 +36,21 @@ function HandlebarsPlugin(options) {
 
     // register helpers
     var self = this;
-    Object.keys(options.helpers || options.helper || {}).forEach(function (helperId) {
-        var helpers;
+    var helperQueries = options.helpers || {};
+    Object.keys(helperQueries).forEach(function (helperId) {
+        var foundHelpers;
 
         // globbed paths
-        if (typeof options.helper[helperId] === "string") {
-            helpers = glob.sync(options.helper[helperId]);
-            helpers.forEach(function (pathToHelper) {
+        if (typeof helperQueries[helperId] === "string") {
+            foundHelpers = glob.sync(helperQueries[helperId]);
+            foundHelpers.forEach(function (pathToHelper) {
                 addHelper(Handlebars, getHelperId(pathToHelper), require(pathToHelper));
                 self.addDependency(pathToHelper);
             });
 
         // functions
         } else {
-            addHelper(Handlebars, helperId, options.helper[helperId]);
+            addHelper(Handlebars, helperId, helperQueries[helperId]);
         }
     });
 }
