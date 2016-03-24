@@ -1,7 +1,7 @@
 "use strict";
 
 
-var fs = require("fs");
+var fs = require("fs-extra");
 var chalk = require("chalk");
 var partialUtils = require("./utils/partials");
 var Handlebars = require("handlebars");
@@ -104,7 +104,7 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         if (options.onBeforeSave) {
             result = options.onBeforeSave(Handlebars, result) || result;
         }
-    	fs.writeFileSync(outputFile, result, "utf-8");
+    	fs.outputFileSync(outputFile, result, "utf-8");
 
         console.log(chalk.green(outputFile + " created"));
 
