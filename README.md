@@ -31,10 +31,10 @@ var webpackConfig = {
                 path.join(process.cwd(), "app", "src", "components", "*", "*.hbs")
             ],
 
-            // register custom helpers
+            // register custom helpers. May be either a function or a glob-pattern
             helpers: {
                 nameOfHbsHelper: Function.prototype,
-                path.join(process.cwd(), "app", "helpers", "*.helper.js")
+                projectHelpers: path.join(process.cwd(), "app", "helpers", "*.helper.js")
             },
 
             // hooks
