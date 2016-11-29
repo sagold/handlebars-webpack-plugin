@@ -8,7 +8,7 @@ var log = require("./log");
 
 
 function getPartialId(path) {
-	return path.match(/\/([^\/]+\/[^\/]+)\.hbs/).pop();
+    return path.match(/\/([^\/]+\/[^\/]+)\.[^\.]+$/).pop();
 }
 
 function loadPartialsMap(Handlebars, partialsGlob) {
