@@ -6,6 +6,7 @@ var chalk = require("chalk");
 var partialUtils = require("./utils/partials");
 var Handlebars = require("handlebars");
 var glob = require("glob");
+var path = require("path");
 
 
 // export Handlebars for easy access in helpers
@@ -29,9 +30,9 @@ function HandlebarsPlugin(options) {
     }
 
     this.options = options;
-	this.outputFile = options.output;
-	this.entryFile = options.entry;
-	this.data = options.data || {};
+    this.outputFile = options.output;
+    this.entryFile = options.entry;
+    this.data = options.data || {};
     this.fileDependencies = [];
 
     // register helpers
@@ -90,28 +91,39 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         // watch all partials for changes
         self.addDependency.apply(self, Object.keys(partials).map(function (key) {return partials[key]; }) );
 
-        templateContent = self.readFile(entryFile, "utf-8");
 
-        if (options.onBeforeCompile) {
-            templateContent = options.onBeforeCompile(Handlebars, templateContent) || templateContent;
-        }
-        template = Handlebars.compile(templateContent);
+        glob(entryFile, {}, (err, entryFilesArray)=>{
+            if (err) { console.log(err);return false; }
 
-        if (options.onBeforeRender) {
-            data = options.onBeforeRender(Handlebars, data) || data;
-        }
-        result = template(data);
+            entryFilesArray.forEach((entryFileSingle, i)=>{
 
-        if (options.onBeforeSave) {
-            result = options.onBeforeSave(Handlebars, result) || result;
-        }
-    	fs.outputFileSync(outputFile, result, "utf-8");
+                templateContent = self.readFile(entryFileSingle, "utf-8");
+                let fileName = path.basename(entryFileSingle);
+                const fileExt = path.extname(entryFileSingle);
+                fileName = fileName.replace(fileExt, '');
 
-        console.log(chalk.green(outputFile + " created"));
+                if (options.onBeforeCompile) {
+                    templateContent = options.onBeforeCompile(Handlebars, templateContent) || templateContent;
+                }
+                template = Handlebars.compile(templateContent);
 
-        if (options.onDone) {
-            options.onDone(Handlebars);
-        }
+                if (options.onBeforeRender) {
+                    data = options.onBeforeRender(Handlebars, data) || data;
+                }
+                result = template(data);
+
+                if (options.onBeforeSave) {
+                    result = options.onBeforeSave(Handlebars, result) || result;
+                }
+
+                const outputFileNew = outputFile.replace('[name]', fileName);
+                fs.outputFileSync(outputFileNew, result, "utf-8");
+
+                if (options.onDone) {
+                    options.onDone(Handlebars);
+                }
+            });
+        });
     });
 
     compiler.plugin("emit", function (compiler, done) {
