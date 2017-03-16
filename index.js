@@ -1,11 +1,12 @@
 "use strict";
 
-
 var fs = require("fs-extra");
+var path = require("path");
 var chalk = require("chalk");
 var partialUtils = require("./utils/partials");
 var Handlebars = require("handlebars");
 var glob = require("glob");
+var log = require('./utils/log');
 
 
 // export Handlebars for easy access in helpers
@@ -17,6 +18,10 @@ function getHelperId(filepath) {
     return id.replace(/\.?helper\.?/, "");
 }
 
+function getDataId(filepath) {
+    var id = filepath.match(/\/([^\/]*)$/).pop();
+    return id.replace(/\.?data\.?/, "");
+}
 
 function addHelper(Handlebars, id, fun) {
     console.log(chalk.grey("HandlebarsPlugin: registering helper " + id));
@@ -29,9 +34,8 @@ function HandlebarsPlugin(options) {
     }
 
     this.options = options;
-	this.outputFile = options.output;
-	this.entryFile = options.entry;
-	this.data = options.data || {};
+		this.outputFile = options.output;
+		this.entryFile = options.entry;
     this.fileDependencies = [];
 
     // register helpers
@@ -69,7 +73,6 @@ HandlebarsPlugin.prototype.addDependency = function () {
 HandlebarsPlugin.prototype.apply = function (compiler) {
     var self = this;
     var options = this.options;
-    var data = this.data;
     var entryFile = this.entryFile;
     var outputFile = this.outputFile;
 
@@ -78,6 +81,8 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         var template;
         var result;
         var partials;
+        var data = {};
+        var dataMap;
 
         // fetch paths to partials
         partials = partialUtils.loadMap(Handlebars, options.partials);
@@ -97,9 +102,23 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         }
         template = Handlebars.compile(templateContent);
 
+        // fetch paths to data files
+        dataMap = partialUtils.loadMap(Handlebars, options.data);
+
         if (options.onBeforeRender) {
-            data = options.onBeforeRender(Handlebars, data) || data;
+            dataMap = options.onBeforeRender(Handlebars, dataMap) || dataMap;
         }
+
+        // watch all data files for changes
+        self.addDependency.apply(self, Object.keys(dataMap).map(function (key) {return dataMap[key]; }) );
+
+        Object.keys(dataMap).forEach(function (dataId) {
+          log(chalk.gray("registering data file " + getDataId(dataId)));
+          delete require.cache[dataMap[dataId]];
+          delete require.cache[fs.realpathSync(dataMap[dataId])];
+          data[getDataId(dataId)] = require(dataMap[dataId]);
+        });
+
         result = template(data);
 
         if (options.onBeforeSave) {
