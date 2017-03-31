@@ -19,9 +19,9 @@ var webpackConfig = {
     plugins: [
 
         new HandlebarsPlugin({
-            // path to main hbs template
+            // path to hbs entry file(s)
             entry: path.join(process.cwd(), "app", "src", "*.hbs"),
-            // filepath to result
+            // output path and filename(s)
             output: path.join(process.cwd(), "build", "[name].html"),
             // data passed to main hbs template: `main-template(data)`
             data: require("./app/data/project.json"),
