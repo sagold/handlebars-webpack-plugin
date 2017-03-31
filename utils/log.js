@@ -1,13 +1,9 @@
-"use strict";
+const chalk = require("chalk");
 
 
-var chalk = require("chalk");
-
-
-function log() {
-	var args = Array.prototype.slice.call(arguments, 0);
-	args.unshift(chalk.gray("HandlebarsPlugin:"));
-	console.log.apply(console, args);
+function log(...args) {
+    args.unshift(chalk.gray("HandlebarsPlugin:"));
+    console.log.apply(console, args);
 }
 
 

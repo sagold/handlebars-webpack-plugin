@@ -42,8 +42,8 @@ var webpackConfig = {
             onBeforeAddPartials: function (Handlebars, partialsMap) {},
             onBeforeCompile: function (Handlebars, templateContent) {},
             onBeforeRender: function (Handlebars, data) {},
-            onBeforeSave: function (Handlebars, resultHtml) {},
-            onDone: function (Handlebars) {}
+            onBeforeSave: function (Handlebars, resultHtml, filename) {},
+            onDone: function (Handlebars, filename) {}
         })
     ]
 };

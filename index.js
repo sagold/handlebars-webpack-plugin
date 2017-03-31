@@ -1,141 +1,141 @@
-"use strict";
-
-
-var fs = require("fs-extra");
-var chalk = require("chalk");
-var partialUtils = require("./utils/partials");
-var Handlebars = require("handlebars");
-var glob = require("glob");
-var path = require("path");
-var log = require("./utils/log");
-
-
-// export Handlebars for easy access in helpers
-HandlebarsPlugin.Handlebars = Handlebars;
+const fs = require("fs-extra");
+const chalk = require("chalk");
+const partialUtils = require("./utils/partials");
+const Handlebars = require("handlebars");
+const glob = require("glob");
+const path = require("path");
+const log = require("./utils/log");
 
 
 function getHelperId(filepath) {
-    var id = filepath.match(/\/([^\/]*).js$/).pop();
+    const id = filepath.match(/\/([^/]*).js$/).pop();
     return id.replace(/\.?helper\.?/, "");
 }
 
 
-function addHelper(Handlebars, id, fun) {
-    console.log(chalk.grey("HandlebarsPlugin: registering helper " + id));
+function addHelper(Handlebars, id, fun) { // eslint-disable-line no-shadow
+    log(chalk.grey(`registering helper ${id}`));
     Handlebars.registerHelper(id, fun);
 }
 
-function HandlebarsPlugin(options) {
-    if (options.onBeforeSetup) {
+class HandlebarsPlugin {
+
+    constructor(options) {
+        options = Object.assign({
+            onBeforeSetup: Function.prototype,
+            onBeforeAddPartials: Function.prototype,
+            onBeforeCompile: Function.prototype,
+            onBeforeRender: Function.prototype,
+            onBeforeSave: Function.prototype,
+            onDone: Function.prototype
+        }, options);
+
         options.onBeforeSetup(Handlebars);
+
+        this.options = options;
+        this.outputFile = options.output;
+        this.entryFile = options.entry;
+        this.data = options.data || {};
+        this.fileDependencies = [];
+
+        // register helpers
+        const helperQueries = options.helpers || {};
+        Object.keys(helperQueries).forEach((helperId) => {
+            let foundHelpers;
+
+            // globbed paths
+            if (typeof helperQueries[helperId] === "string") {
+                foundHelpers = glob.sync(helperQueries[helperId]);
+                foundHelpers.forEach((pathToHelper) => {
+                    addHelper(Handlebars, getHelperId(pathToHelper), require(pathToHelper));
+                    this.addDependency(pathToHelper);
+                });
+
+            // functions
+            } else {
+                addHelper(Handlebars, helperId, helperQueries[helperId]);
+            }
+        });
     }
 
-    this.options = options;
-    this.outputFile = options.output;
-    this.entryFile = options.entry;
-    this.data = options.data || {};
-    this.fileDependencies = [];
+    readFile(filepath) {
+        this.fileDependencies.push(filepath);
+        return fs.readFileSync(filepath, "utf-8");
+    }
 
-    // register helpers
-    var self = this;
-    var helperQueries = options.helpers || {};
-    Object.keys(helperQueries).forEach(function (helperId) {
-        var foundHelpers;
+    addDependency(...args) {
+        this.fileDependencies.push.apply(this.fileDependencies, args);
+    }
 
-        // globbed paths
-        if (typeof helperQueries[helperId] === "string") {
-            foundHelpers = glob.sync(helperQueries[helperId]);
-            foundHelpers.forEach(function (pathToHelper) {
-                addHelper(Handlebars, getHelperId(pathToHelper), require(pathToHelper));
-                self.addDependency(pathToHelper);
-            });
+    apply(compiler) {
+        var self = this;
+        var options = this.options;
+        var data = this.data;
+        var entryFile = this.entryFile;
+        var outputFile = this.outputFile;
 
-        // functions
-        } else {
-            addHelper(Handlebars, helperId, helperQueries[helperId]);
-        }
-    });
-}
+        compiler.plugin("compile", () => {
+            // fetch paths to partials
+            const partials = partialUtils.loadMap(Handlebars, options.partials);
 
-HandlebarsPlugin.Handlebars = Handlebars;
-
-HandlebarsPlugin.prototype.readFile = function (filepath) {
-    this.fileDependencies.push(filepath);
-    return fs.readFileSync(filepath, "utf-8");
-};
-
-HandlebarsPlugin.prototype.addDependency = function () {
-    this.fileDependencies.push.apply(this.fileDependencies, arguments);
-};
-
-HandlebarsPlugin.prototype.apply = function (compiler) {
-    var self = this;
-    var options = this.options;
-    var data = this.data;
-    var entryFile = this.entryFile;
-    var outputFile = this.outputFile;
-
-    compiler.plugin("compile", function (object, done) {
-        var partials;
-
-        // fetch paths to partials
-        partials = partialUtils.loadMap(Handlebars, options.partials);
-
-        if (options.onBeforeAddPartials) {
             options.onBeforeAddPartials(Handlebars, partials);
-        }
-        // register partials
-        partialUtils.addMap(Handlebars, partials);
-        // watch all partials for changes
-        self.addDependency.apply(self, Object.keys(partials).map(function (key) {return partials[key]; }) );
+
+            // register partials
+            partialUtils.addMap(Handlebars, partials);
+            // watch all partials for changes
+            this.addDependency.apply(this, Object.keys(partials).map((key) => partials[key]));
 
 
-        glob(entryFile, function (err, entryFilesArray) {
-            if (err) {
-                console.log(err);
-                return false;
-            }
+            glob(entryFile, (err, entryFilesArray) => {
+                if (err) {
+                    console.log(err);
+                    return false;
+                }
 
-            entryFilesArray.forEach(function (entryFileSingle) {
-                var template;
-                var result;
-                var templateContent = self.readFile(entryFileSingle, "utf-8");
-                var fileName = path.basename(entryFileSingle);
-                var fileExt = path.extname(entryFileSingle);
-                fileName = fileName.replace(fileExt, '');
+                if (entryFilesArray.length === 0) {
+                    log(chalk.red(`no valid entry files found for ${entryFile}`));
+                    return false;
+                }
 
-                if (options.onBeforeCompile) {
+                entryFilesArray.forEach((entryFileSingle) => {
+                    let result;
+                    let templateContent = self.readFile(entryFileSingle, "utf-8");
+                    let fileName = path.basename(entryFileSingle);
+                    const fileExt = path.extname(entryFileSingle);
+                    fileName = fileName.replace(fileExt, "");
+
                     templateContent = options.onBeforeCompile(Handlebars, templateContent) || templateContent;
-                }
-                template = Handlebars.compile(templateContent);
 
-                if (options.onBeforeRender) {
+                    const template = Handlebars.compile(templateContent);
+
                     data = options.onBeforeRender(Handlebars, data) || data;
-                }
-                result = template(data);
+                    result = template(data);
 
-                if (options.onBeforeSave) {
-                    result = options.onBeforeSave(Handlebars, result) || result;
-                }
 
-                var outputFileNew = outputFile.replace('[name]', fileName);
-                fs.outputFileSync(outputFileNew, result, "utf-8");
-                log(chalk.grey("created output '" + outputFileNew.replace(process.cwd() + "/", "") + "'"));
+                    const outputFileNew = outputFile.replace("[name]", fileName);
+                    result = options.onBeforeSave(Handlebars, result, outputFileNew) || result;
 
-                if (options.onDone) {
-                    options.onDone(Handlebars);
-                }
+                    fs.outputFileSync(outputFileNew, result, "utf-8");
+                    log(chalk.grey(`created output '${outputFileNew.replace(`${process.cwd()}/`, "")}'`));
+
+
+                    options.onDone(Handlebars, outputFileNew);
+                });
+
+                return true;
             });
         });
-    });
 
-    compiler.plugin("emit", function (compiler, done) {
-        // add dependencies to watch. This might not be the correct place for that - but it works
-        // webpack filters duplicates...
-        compiler.fileDependencies = compiler.fileDependencies.concat(self.fileDependencies);
-        done();
-    });
-};
+        compiler.plugin("emit", (compiler, done) => { // eslint-disable-line no-shadow
+            // add dependencies to watch. This might not be the correct place for that - but it works
+            // webpack filters duplicates...
+            compiler.fileDependencies = compiler.fileDependencies.concat(self.fileDependencies);
+            done();
+        });
+    }
+}
 
+// export Handlebars for easy access in helpers
+HandlebarsPlugin.Handlebars = Handlebars;
 
 module.exports = HandlebarsPlugin;
