@@ -4,7 +4,7 @@
   "description": "Renders your html-template on build time",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -27,5 +27,8 @@
     "fs-extra": "^0.26.7",
     "glob": "^5.0.15",
     "handlebars": "^4.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^3.10.2"
   }
 }
