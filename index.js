@@ -6,6 +6,8 @@ var chalk = require("chalk");
 var partialUtils = require("./utils/partials");
 var Handlebars = require("handlebars");
 var glob = require("glob");
+var path = require("path");
+var log = require("./utils/log");
 
 
 // export Handlebars for easy access in helpers
@@ -29,9 +31,9 @@ function HandlebarsPlugin(options) {
     }
 
     this.options = options;
-	this.outputFile = options.output;
-	this.entryFile = options.entry;
-	this.data = options.data || {};
+    this.outputFile = options.output;
+    this.entryFile = options.entry;
+    this.data = options.data || {};
     this.fileDependencies = [];
 
     // register helpers
@@ -74,9 +76,6 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
     var outputFile = this.outputFile;
 
     compiler.plugin("compile", function (object, done) {
-        var templateContent;
-        var template;
-        var result;
         var partials;
 
         // fetch paths to partials
@@ -90,28 +89,44 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         // watch all partials for changes
         self.addDependency.apply(self, Object.keys(partials).map(function (key) {return partials[key]; }) );
 
-        templateContent = self.readFile(entryFile, "utf-8");
 
-        if (options.onBeforeCompile) {
-            templateContent = options.onBeforeCompile(Handlebars, templateContent) || templateContent;
-        }
-        template = Handlebars.compile(templateContent);
+        glob(entryFile, function (err, entryFilesArray) {
+            if (err) {
+                console.log(err);
+                return false;
+            }
 
-        if (options.onBeforeRender) {
-            data = options.onBeforeRender(Handlebars, data) || data;
-        }
-        result = template(data);
+            entryFilesArray.forEach(function (entryFileSingle) {
+                var template;
+                var result;
+                var templateContent = self.readFile(entryFileSingle, "utf-8");
+                var fileName = path.basename(entryFileSingle);
+                var fileExt = path.extname(entryFileSingle);
+                fileName = fileName.replace(fileExt, '');
 
-        if (options.onBeforeSave) {
-            result = options.onBeforeSave(Handlebars, result) || result;
-        }
-    	fs.outputFileSync(outputFile, result, "utf-8");
+                if (options.onBeforeCompile) {
+                    templateContent = options.onBeforeCompile(Handlebars, templateContent) || templateContent;
+                }
+                template = Handlebars.compile(templateContent);
 
-        console.log(chalk.green(outputFile + " created"));
+                if (options.onBeforeRender) {
+                    data = options.onBeforeRender(Handlebars, data) || data;
+                }
+                result = template(data);
 
-        if (options.onDone) {
-            options.onDone(Handlebars);
-        }
+                if (options.onBeforeSave) {
+                    result = options.onBeforeSave(Handlebars, result) || result;
+                }
+
+                var outputFileNew = outputFile.replace('[name]', fileName);
+                fs.outputFileSync(outputFileNew, result, "utf-8");
+                log(chalk.grey("created output '" + outputFileNew.replace(process.cwd() + "/", "") + "'"));
+
+                if (options.onDone) {
+                    options.onDone(Handlebars);
+                }
+            });
+        });
     });
 
     compiler.plugin("emit", function (compiler, done) {
