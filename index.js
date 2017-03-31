@@ -1,27 +1,30 @@
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const partialUtils = require("./utils/partials");
+const helperUtils = require("./utils/helpers");
 const Handlebars = require("handlebars");
 const glob = require("glob");
 const path = require("path");
 const log = require("./utils/log");
 
 
-function getHelperId(filepath) {
-    const id = filepath.match(/\/([^/]*).js$/).pop();
-    return id.replace(/\.?helper\.?/, "");
+function getTargetFilepath(filepath, outputTemplate) {
+    const fileName = path
+        .basename(filepath)
+        .replace(path.extname(filepath), "");
+
+    return outputTemplate.replace("[name]", fileName);
 }
 
-
-function addHelper(Handlebars, id, fun) { // eslint-disable-line no-shadow
-    log(chalk.grey(`registering helper ${id}`));
-    Handlebars.registerHelper(id, fun);
-}
 
 class HandlebarsPlugin {
 
     constructor(options) {
-        options = Object.assign({
+        this.options = Object.assign({
+            entry: null,
+            output: null,
+            data: {},
+            helpers: {},
             onBeforeSetup: Function.prototype,
             onBeforeAddPartials: Function.prototype,
             onBeforeCompile: Function.prototype,
@@ -30,31 +33,32 @@ class HandlebarsPlugin {
             onDone: Function.prototype
         }, options);
 
-        options.onBeforeSetup(Handlebars);
-
-        this.options = options;
-        this.outputFile = options.output;
-        this.entryFile = options.entry;
-        this.data = options.data || {};
+        this.options.onBeforeSetup(Handlebars);
+        this.data = this.options.data;
         this.fileDependencies = [];
 
         // register helpers
-        const helperQueries = options.helpers || {};
-        Object.keys(helperQueries).forEach((helperId) => {
-            let foundHelpers;
+        const helperMap = helperUtils.resolve(this.options.helpers);
+        helperMap.forEach((helper) => {
+            helperUtils.register(Handlebars, helper.id, helper.helperFunction);
+            this.addDependency(helper.filepath);
+        });
 
-            // globbed paths
-            if (typeof helperQueries[helperId] === "string") {
-                foundHelpers = glob.sync(helperQueries[helperId]);
-                foundHelpers.forEach((pathToHelper) => {
-                    addHelper(Handlebars, getHelperId(pathToHelper), require(pathToHelper));
-                    this.addDependency(pathToHelper);
-                });
+        // register partials
+        const partials = partialUtils.resolve(Handlebars, this.options.partials);
+        this.options.onBeforeAddPartials(Handlebars, partials);
+        partialUtils.addMap(Handlebars, partials);
+        // watch all partials for changes
+        this.addDependency.apply(this, Object.keys(partials).map((key) => partials[key]));
+    }
 
-            // functions
-            } else {
-                addHelper(Handlebars, helperId, helperQueries[helperId]);
-            }
+    apply(compiler) {
+        compiler.plugin("compile", () => this.compileAllEntryFiles());
+        compiler.plugin("emit", (compiler, done) => { // eslint-disable-line no-shadow
+            // add dependencies to watch. This might not be the correct place for that - but it works
+            // webpack filters duplicates...
+            compiler.fileDependencies = compiler.fileDependencies.concat(this.fileDependencies);
+            done();
         });
     }
 
@@ -64,74 +68,39 @@ class HandlebarsPlugin {
     }
 
     addDependency(...args) {
-        this.fileDependencies.push.apply(this.fileDependencies, args);
+        this.fileDependencies.push.apply(this.fileDependencies, args.filter((filename) => filename));
     }
 
-    apply(compiler) {
-        var self = this;
-        var options = this.options;
-        var data = this.data;
-        var entryFile = this.entryFile;
-        var outputFile = this.outputFile;
-
-        compiler.plugin("compile", () => {
-            // fetch paths to partials
-            const partials = partialUtils.loadMap(Handlebars, options.partials);
-
-            options.onBeforeAddPartials(Handlebars, partials);
-
-            // register partials
-            partialUtils.addMap(Handlebars, partials);
-            // watch all partials for changes
-            this.addDependency.apply(this, Object.keys(partials).map((key) => partials[key]));
-
-
-            glob(entryFile, (err, entryFilesArray) => {
-                if (err) {
-                    console.log(err);
-                    return false;
-                }
-
-                if (entryFilesArray.length === 0) {
-                    log(chalk.red(`no valid entry files found for ${entryFile}`));
-                    return false;
-                }
-
-                entryFilesArray.forEach((entryFileSingle) => {
-                    let result;
-                    let templateContent = self.readFile(entryFileSingle, "utf-8");
-                    let fileName = path.basename(entryFileSingle);
-                    const fileExt = path.extname(entryFileSingle);
-                    fileName = fileName.replace(fileExt, "");
-
-                    templateContent = options.onBeforeCompile(Handlebars, templateContent) || templateContent;
-
-                    const template = Handlebars.compile(templateContent);
-
-                    data = options.onBeforeRender(Handlebars, data) || data;
-                    result = template(data);
-
-
-                    const outputFileNew = outputFile.replace("[name]", fileName);
-                    result = options.onBeforeSave(Handlebars, result, outputFileNew) || result;
-
-                    fs.outputFileSync(outputFileNew, result, "utf-8");
-                    log(chalk.grey(`created output '${outputFileNew.replace(`${process.cwd()}/`, "")}'`));
-
-
-                    options.onDone(Handlebars, outputFileNew);
-                });
-
-                return true;
-            });
+    compileAllEntryFiles() {
+        glob(this.options.entry, (err, entryFilesArray) => {
+            if (err) {
+                throw err;
+            }
+            if (entryFilesArray.length === 0) {
+                log(chalk.yellow(`no valid entry files found for ${this.options.entry} -- aborting`));
+                return;
+            }
+            entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath));
+            // enforce new line after plugin has finished
+            console.log();
         });
+    }
 
-        compiler.plugin("emit", (compiler, done) => { // eslint-disable-line no-shadow
-            // add dependencies to watch. This might not be the correct place for that - but it works
-            // webpack filters duplicates...
-            compiler.fileDependencies = compiler.fileDependencies.concat(self.fileDependencies);
-            done();
-        });
+    compileEntryFile(filepath) {
+        const targetFilepath = getTargetFilepath(filepath, this.options.output);
+        // fetch template content
+        let templateContent = this.readFile(filepath, "utf-8");
+        templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
+        // create template
+        const template = Handlebars.compile(templateContent);
+        const data = this.options.onBeforeRender(Handlebars, this.data) || this.data;
+        // compile template
+        let result = template(data);
+        result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;
+        // write result to file
+        fs.outputFileSync(targetFilepath, result, "utf-8");
+        this.options.onDone(Handlebars, targetFilepath);
+        log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
 

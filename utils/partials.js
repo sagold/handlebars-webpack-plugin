@@ -4,11 +4,11 @@ const chalk = require("chalk");
 const log = require("./log");
 
 
-function getPartialId(path) {
+function getId(path) {
     return path.match(/\/([^/]+\/[^/]+)\.[^.]+$/).pop();
 }
 
-function loadPartialsMap(Handlebars, partialsGlob) {
+function resolve(Handlebars, partialsGlob) {
     let partials = [];
 
     if (partialsGlob == null) {
@@ -21,15 +21,15 @@ function loadPartialsMap(Handlebars, partialsGlob) {
 
     const partialMap = {};
     partials.forEach((path) => {
-        partialMap[getPartialId(path)] = path;
+        partialMap[getId(path)] = path;
     });
 
     return partialMap;
 }
 
-function addPartialsMap(Handlebars, partialMap) {
+function addMap(Handlebars, partialMap) {
     Object.keys(partialMap).forEach((partialId) => {
-        log(chalk.gray(`registering partial '${partialId}'`));
+        log(chalk.gray(`+ partial '${partialId}'`));
         Handlebars.registerPartial(partialId, fs.readFileSync(partialMap[partialId], "utf8"));
     });
 }
@@ -37,7 +37,7 @@ function addPartialsMap(Handlebars, partialMap) {
 
 module.exports = {
 
-    getId: getPartialId,
-    loadMap: loadPartialsMap,
-    addMap: addPartialsMap
+    getId,
+    resolve,
+    addMap
 };
