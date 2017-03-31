@@ -7,6 +7,7 @@ var partialUtils = require("./utils/partials");
 var Handlebars = require("handlebars");
 var glob = require("glob");
 var path = require("path");
+var log = require("./utils/log");
 
 
 // export Handlebars for easy access in helpers
@@ -75,9 +76,6 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
     var outputFile = this.outputFile;
 
     compiler.plugin("compile", function (object, done) {
-        var templateContent;
-        var template;
-        var result;
         var partials;
 
         // fetch paths to partials
@@ -92,14 +90,18 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
         self.addDependency.apply(self, Object.keys(partials).map(function (key) {return partials[key]; }) );
 
 
-        glob(entryFile, {}, (err, entryFilesArray)=>{
-            if (err) { console.log(err);return false; }
+        glob(entryFile, function (err, entryFilesArray) {
+            if (err) {
+                console.log(err);
+                return false;
+            }
 
-            entryFilesArray.forEach((entryFileSingle, i)=>{
-
-                templateContent = self.readFile(entryFileSingle, "utf-8");
-                let fileName = path.basename(entryFileSingle);
-                const fileExt = path.extname(entryFileSingle);
+            entryFilesArray.forEach(function (entryFileSingle) {
+                var template;
+                var result;
+                var templateContent = self.readFile(entryFileSingle, "utf-8");
+                var fileName = path.basename(entryFileSingle);
+                var fileExt = path.extname(entryFileSingle);
                 fileName = fileName.replace(fileExt, '');
 
                 if (options.onBeforeCompile) {
@@ -116,8 +118,9 @@ HandlebarsPlugin.prototype.apply = function (compiler) {
                     result = options.onBeforeSave(Handlebars, result) || result;
                 }
 
-                const outputFileNew = outputFile.replace('[name]', fileName);
+                var outputFileNew = outputFile.replace('[name]', fileName);
                 fs.outputFileSync(outputFileNew, result, "utf-8");
+                log(chalk.grey("created output '" + outputFileNew.replace(process.cwd() + "/", "") + "'"));
 
                 if (options.onDone) {
                     options.onDone(Handlebars);
