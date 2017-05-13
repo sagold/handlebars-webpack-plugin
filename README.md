@@ -22,6 +22,7 @@ var webpackConfig = {
             // path to hbs entry file(s)
             entry: path.join(process.cwd(), "app", "src", "*.hbs"),
             // output path and filename(s)
+            // if ommited, the input filepath stripped of its extension will be used
             output: path.join(process.cwd(), "build", "[name].html"),
             // data passed to main hbs template: `main-template(data)`
             data: require("./app/data/project.json"),
