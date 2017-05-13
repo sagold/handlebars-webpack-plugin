@@ -36,6 +36,7 @@ class HandlebarsPlugin {
         this.options.onBeforeSetup(Handlebars);
         this.data = this.options.data;
         this.fileDependencies = [];
+        this.assetsToEmit = {};
 
         // register helpers
         const helperMap = helperUtils.resolve(this.options.helpers);
@@ -43,11 +44,12 @@ class HandlebarsPlugin {
             helperUtils.register(Handlebars, helper.id, helper.helperFunction);
             this.addDependency(helper.filepath);
         });
-
-        this.registerPartials();
     }
 
-    registerPartials() {
+    /**
+     * Register all partials to Handlebars
+     */
+    loadPartials() {
         // register partials
         const partials = partialUtils.resolve(Handlebars, this.options.partials);
         this.options.onBeforeAddPartials(Handlebars, partials);
@@ -56,20 +58,46 @@ class HandlebarsPlugin {
         this.addDependency.apply(this, Object.keys(partials).map((key) => partials[key]));
     }
 
+    /**
+     * Webpack plugin hook - main entry point
+     * @param  {Compiler} compiler
+     */
     apply(compiler) {
-        compiler.plugin("compile", () => this.compileAllEntryFiles());
-        compiler.plugin("emit", (compiler, done) => { // eslint-disable-line no-shadow
+
+        // COMPILE TEMPLATES
+        compiler.plugin("make", (compilation, done) => {
+            log(chalk.gray("start compilation"));
+            this.loadPartials(); // Refresh partials
+            this.compileAllEntryFiles(done); // build all html pages
+        });
+
+        // REGISTER FILE DEPENDENCIES TO WEBPACK
+        compiler.plugin("emit", (compilation, done) => {
             // add dependencies to watch. This might not be the correct place for that - but it works
             // webpack filters duplicates...
-            compiler.fileDependencies = compiler.fileDependencies.concat(this.fileDependencies);
-            this.emitGeneratedFiles(compiler);
+            compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
+            // emit generated html pages (webpack-dev-server)
+            this.emitGeneratedFiles(compilation);
             done();
         });
     }
 
+    /**
+     * Returns contents of a dependent file
+     * @param  {String} filepath
+     * @return {String} filecontents
+     */
     readFile(filepath) {
         this.fileDependencies.push(filepath);
         return fs.readFileSync(filepath, "utf-8");
+    }
+
+    /**
+     * Registers a file as a dependency
+     * @param {...[String]} args    - list of filepaths
+     */
+    addDependency(...args) {
+        this.fileDependencies.push.apply(this.fileDependencies, args.filter((filename) => filename));
     }
 
     /**
@@ -85,13 +113,6 @@ class HandlebarsPlugin {
     }
 
     /**
-     * Resets list of generated files
-     */
-    clearGeneratedFiles() {
-        this.assetsToEmit = {};
-    }
-
-    /**
      * On emit
      * Notifies webpack-dev-server of generated files
      * @param  {Compilation} compilation
@@ -102,13 +123,12 @@ class HandlebarsPlugin {
         });
     }
 
-    addDependency(...args) {
-        this.fileDependencies.push.apply(this.fileDependencies, args.filter((filename) => filename));
-    }
-
-    compileAllEntryFiles() {
-        this.clearGeneratedFiles(); // reset emitted files, because we created them here again
-
+    /**
+     * @async
+     * Generates all given handlebars templates
+     * @param  {Function} done
+     */
+    compileAllEntryFiles(done) {
         glob(this.options.entry, (err, entryFilesArray) => {
             if (err) {
                 throw err;
@@ -120,12 +140,16 @@ class HandlebarsPlugin {
             entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath));
             // enforce new line after plugin has finished
             console.log();
+
+            done();
         });
     }
 
+    /**
+     * Generates the html file for the given filepath
+     * @param  {String} filepath    - filepath to handelebars template
+     */
     compileEntryFile(filepath) {
-        // Refresh partials
-        this.registerPartials();
         const targetFilepath = getTargetFilepath(filepath, this.options.output);
         // fetch template content
         let templateContent = this.readFile(filepath, "utf-8");
@@ -141,7 +165,6 @@ class HandlebarsPlugin {
         this.options.onDone(Handlebars, targetFilepath);
         // notify webpack about newly filepath file (wds)
         this.registerGeneratedFile(targetFilepath, result);
-
         log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
