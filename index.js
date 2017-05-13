@@ -9,10 +9,14 @@ const log = require("./utils/log");
 
 
 function getTargetFilepath(filepath, outputTemplate) {
-    const fileName = path
-        .basename(filepath)
-        .replace(path.extname(filepath), "");
-    return outputTemplate.replace("[name]", fileName);
+    if (outputTemplate) {
+        const fileName = path
+            .basename(filepath)
+            .replace(path.extname(filepath), "");
+        return outputTemplate.replace("[name]", fileName);
+    }
+  
+  return filepath.replace(path.extname(filepath), "");
 }
 
 
