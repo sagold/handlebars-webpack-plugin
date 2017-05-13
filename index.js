@@ -62,6 +62,7 @@ class HandlebarsPlugin {
             // add dependencies to watch. This might not be the correct place for that - but it works
             // webpack filters duplicates...
             compiler.fileDependencies = compiler.fileDependencies.concat(this.fileDependencies);
+            this.emitGeneratedFiles(compiler);
             done();
         });
     }
@@ -71,11 +72,43 @@ class HandlebarsPlugin {
         return fs.readFileSync(filepath, "utf-8");
     }
 
+    /**
+     * Register generated html files to support serving file with webpack-dev-server
+     * @param  {String} filepath    - target filepath, where the file is created
+     * @param  {String} content     - file contents
+     */
+    registerGeneratedFile(filepath, content) {
+        this.assetsToEmit[path.basename(filepath)] = {
+            source: () => content,
+            size: () => content.length
+        };
+    }
+
+    /**
+     * Resets list of generated files
+     */
+    clearGeneratedFiles() {
+        this.assetsToEmit = {};
+    }
+
+    /**
+     * On emit
+     * Notifies webpack-dev-server of generated files
+     * @param  {Compilation} compilation
+     */
+    emitGeneratedFiles(compilation) {
+        Object.keys(this.assetsToEmit).forEach((filename) => {
+            compilation.assets[filename] = this.assetsToEmit[filename];
+        });
+    }
+
     addDependency(...args) {
         this.fileDependencies.push.apply(this.fileDependencies, args.filter((filename) => filename));
     }
 
     compileAllEntryFiles() {
+        this.clearGeneratedFiles(); // reset emitted files, because we created them here again
+
         glob(this.options.entry, (err, entryFilesArray) => {
             if (err) {
                 throw err;
@@ -106,6 +139,9 @@ class HandlebarsPlugin {
         // write result to file
         fs.outputFileSync(targetFilepath, result, "utf-8");
         this.options.onDone(Handlebars, targetFilepath);
+        // notify webpack about newly filepath file (wds)
+        this.registerGeneratedFile(targetFilepath, result);
+
         log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
