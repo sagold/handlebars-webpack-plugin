@@ -44,6 +44,10 @@ class HandlebarsPlugin {
             this.addDependency(helper.filepath);
         });
 
+        this.registerPartials();
+    }
+
+    registerPartials() {
         // register partials
         const partials = partialUtils.resolve(Handlebars, this.options.partials);
         this.options.onBeforeAddPartials(Handlebars, partials);
@@ -87,6 +91,8 @@ class HandlebarsPlugin {
     }
 
     compileEntryFile(filepath) {
+        // Refresh partials
+        this.registerPartials();
         const targetFilepath = getTargetFilepath(filepath, this.options.output);
         // fetch template content
         let templateContent = this.readFile(filepath, "utf-8");
