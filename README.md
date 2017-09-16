@@ -26,6 +26,8 @@ var webpackConfig = {
             output: path.join(process.cwd(), "build", "[name].html"),
             // data passed to main hbs template: `main-template(data)`
             data: require("./app/data/project.json"),
+            // or add it as filepath to rebuild data on change using webpack-dev-server
+            data: path.join(__dirname, "app/data/project.json"),
 
             // globbed path to partials, where folder/filename is unique
             partials: [
