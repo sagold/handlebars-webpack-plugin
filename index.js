@@ -44,9 +44,9 @@ class HandlebarsPlugin {
         }, options);
 
         this.options.onBeforeSetup(Handlebars);
-        this.data = this.options.data;
         this.fileDependencies = [];
         this.assetsToEmit = {};
+        this.updateData();
 
         // register helpers
         const helperMap = helperUtils.resolve(this.options.helpers);
@@ -139,12 +139,30 @@ class HandlebarsPlugin {
         });
     }
 
+    updateData() {
+        if (this.options.data && typeof this.options.data === "string") {
+            try {
+                const dataFromFile = JSON.parse(this.readFile(this.options.data));
+                this.addDependency(this.options.data);
+                this.data = dataFromFile;
+            } catch (e) {
+                console.error(`Tried to read ${this.options.data} as json-file and failed. Using it as data source...`);
+                this.data = this.options.data;
+            }
+        } else {
+            this.data = this.options.data;
+        }
+    }
+
     /**
      * @async
      * Generates all given handlebars templates
      * @param  {Function} done
      */
     compileAllEntryFiles(done) {
+
+        this.updateData();
+
         glob(this.options.entry, (err, entryFilesArray) => {
             if (err) {
                 throw err;
