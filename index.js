@@ -194,10 +194,8 @@ class HandlebarsPlugin {
         // compile template
         let result = template(data);
         result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;
-        // write result to file
-        fs.outputFileSync(targetFilepath, result, "utf-8");
         this.options.onDone(Handlebars, targetFilepath);
-        // notify webpack about newly filepath file (wds)
+        // notify webpack about newly filepath file (wds), which will create the actual html-result
         this.registerGeneratedFile(targetFilepath, result);
 
         log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
