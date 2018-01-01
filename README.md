@@ -21,7 +21,7 @@ var webpackConfig = {
         new HandlebarsPlugin({
             // path to hbs entry file(s)
             entry: path.join(process.cwd(), "app", "src", "*.hbs"),
-            // output path and filename(s)
+            // output path and filename(s). This should lie within the webpacks output-folder
             // if ommited, the input filepath stripped of its extension will be used
             output: path.join(process.cwd(), "build", "[name].html"),
             // data passed to main hbs template: `main-template(data)`
