@@ -78,7 +78,7 @@ class HandlebarsPlugin {
         compiler.plugin("make", (compilation, done) => {
             log(chalk.gray("start compilation"));
             this.loadPartials(); // Refresh partials
-            this.compileAllEntryFiles(done); // build all html pages
+            this.compileAllEntryFiles(compilation.compiler.outputPath, done); // build all html pages
         });
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
@@ -157,9 +157,10 @@ class HandlebarsPlugin {
     /**
      * @async
      * Generates all given handlebars templates
+     * @param  {String} outputPath  - webpack output path for build results
      * @param  {Function} done
      */
-    compileAllEntryFiles(done) {
+    compileAllEntryFiles(outputPath, done) {
 
         this.updateData();
 
@@ -171,7 +172,7 @@ class HandlebarsPlugin {
                 log(chalk.yellow(`no valid entry files found for ${this.options.entry} -- aborting`));
                 return;
             }
-            entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath));
+            entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath, outputPath));
             // enforce new line after plugin has finished
             console.log();
 
@@ -181,12 +182,13 @@ class HandlebarsPlugin {
 
     /**
      * Generates the html file for the given filepath
-     * @param  {String} filepath    - filepath to handelebars template
+     * @param  {String} sourcePath  - filepath to handelebars template
+     * @param  {String} outputPath  - webpack output path for build results
      */
-    compileEntryFile(filepath) {
-        const targetFilepath = getTargetFilepath(filepath, this.options.output);
+    compileEntryFile(sourcePath, outputPath) {
+        let targetFilepath = getTargetFilepath(sourcePath, this.options.output);
         // fetch template content
-        let templateContent = this.readFile(filepath, "utf-8");
+        let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
         // create template
         const template = Handlebars.compile(templateContent);
@@ -194,10 +196,22 @@ class HandlebarsPlugin {
         // compile template
         let result = template(data);
         result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;
-        this.options.onDone(Handlebars, targetFilepath);
-        // notify webpack about newly filepath file (wds), which will create the actual html-result
-        this.registerGeneratedFile(targetFilepath, result);
 
+        if (targetFilepath.includes(outputPath)) {
+            // change the destination path relative to webpacks output folder and emit it via webpack
+            targetFilepath = targetFilepath.replace(outputPath, "").replace(/^\/*/, "");
+            this.assetsToEmit[targetFilepath] = {
+                source: () => result,
+                size: () => result.length
+            };
+
+        } else {
+            // @legacy: if the filepath lies outside the actual webpack destination folder, simply write that file.
+            // There is no wds-support here, because of watched assets being emitted again
+            fs.outputFileSync(targetFilepath, result, "utf-8");
+        }
+
+        this.options.onDone(Handlebars, targetFilepath);
         log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
