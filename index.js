@@ -83,10 +83,9 @@ class HandlebarsPlugin {
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
         compiler.plugin("emit", (compilation, done) => {
-            // add dependencies to watch. This might not be the correct place for that - but it works
-            // webpack filters duplicates...
-            // use .add for Webpack 4 and fallback to concat since before Webpack 4 fileDepenencies was an array
+            // register dependencies at webpack
             if (compilation.fileDependencies.add) {
+                // webpack@4
                 this.fileDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
             } else {
                 compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
