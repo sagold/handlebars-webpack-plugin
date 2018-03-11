@@ -89,7 +89,7 @@ class HandlebarsPlugin {
             if (compilation.fileDependencies.add) {
                 compilation.fileDependencies = compilation.fileDependencies.add(...this.fileDependencies);
             } else {
-                compilation.fileDependencies.concat(this.fileDependencies);
+                compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
             }
             // emit generated html pages (webpack-dev-server)
             this.emitGeneratedFiles(compilation);
