@@ -85,7 +85,12 @@ class HandlebarsPlugin {
         compiler.plugin("emit", (compilation, done) => {
             // add dependencies to watch. This might not be the correct place for that - but it works
             // webpack filters duplicates...
-            compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
+            // use .add for Webpack 4 and fallback to concat since before Webpack 4 fileDepenencies was an array
+            if (compilation.fileDependencies.add) {
+                compilation.fileDependencies = compilation.fileDependencies.add(...this.fileDependencies);
+            } else {
+                compilation.fileDependencies.concat(this.fileDependencies);
+            }
             // emit generated html pages (webpack-dev-server)
             this.emitGeneratedFiles(compilation);
             done();
