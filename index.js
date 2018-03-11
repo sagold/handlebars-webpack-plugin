@@ -43,6 +43,7 @@ class HandlebarsPlugin {
             onDone: Function.prototype
         }, options);
 
+        this.firstCompilation = true;
         this.options.onBeforeSetup(Handlebars);
         this.fileDependencies = [];
         this.assetsToEmit = {};
@@ -76,9 +77,13 @@ class HandlebarsPlugin {
 
         // COMPILE TEMPLATES
         compiler.plugin("make", (compilation, done) => {
-            log(chalk.gray("start compilation"));
+            if (this.dependenciesUpdated(compilation) === false) {
+                return done();
+            }
+
             this.loadPartials(); // Refresh partials
             this.compileAllEntryFiles(compilation.compiler.outputPath, done); // build all html pages
+            return undefined;
         });
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
@@ -92,7 +97,7 @@ class HandlebarsPlugin {
             }
             // emit generated html pages (webpack-dev-server)
             this.emitGeneratedFiles(compilation);
-            done();
+            return done();
         });
     }
 
@@ -112,6 +117,50 @@ class HandlebarsPlugin {
      */
     addDependency(...args) {
         this.fileDependencies.push.apply(this.fileDependencies, args.filter((filename) => filename));
+    }
+
+    /**
+     * @param  {Object} compilation     - webpack compilation
+     * @return {Boolean} true, if a handlebars file or helper has been updated
+     */
+    dependenciesUpdated(compilation) {
+        if (compilation.fileTimestamps.has) { // Map
+            // webpack@4.x
+            const changedFiles = [];
+
+            const prevTimestamps = this.prevTimestamps || {};
+            const currentTimestamps = {};
+
+            compilation.fileTimestamps.forEach((timestamp, watchfile) => {
+                currentTimestamps[watchfile] = timestamp;
+                if ((prevTimestamps[watchfile] || this.startTime) < (currentTimestamps[watchfile] || Infinity)) {
+                    changedFiles.push(watchfile);
+                }
+            });
+
+            this.prevTimestamps = currentTimestamps;
+            return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
+        }
+
+        // webpack@3.x
+        const changedFiles = Object.keys(compilation.fileTimestamps).filter((watchfile) =>
+            (this.prevTimestamps[watchfile] || this.startTime) < (compilation.fileTimestamps[watchfile] || Infinity)
+        );
+
+        return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
+    }
+
+    /**
+     * @param  {Array} list     - list of changed files as absolute paths
+     * @return {Boolean} true, if a file is a dependency of this handlebars build
+     */
+    containsOwnDependency(list) {
+        for (let i = 0; i < list.length; i += 1) {
+            if (this.fileDependencies.includes(list[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -143,6 +192,9 @@ class HandlebarsPlugin {
         });
     }
 
+    /**
+     * (Re)load input data for hbs rendering
+     */
     updateData() {
         if (this.options.data && typeof this.options.data === "string") {
             try {
