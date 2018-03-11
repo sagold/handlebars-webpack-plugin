@@ -87,7 +87,7 @@ class HandlebarsPlugin {
             // webpack filters duplicates...
             // use .add for Webpack 4 and fallback to concat since before Webpack 4 fileDepenencies was an array
             if (compilation.fileDependencies.add) {
-                compilation.fileDependencies = compilation.fileDependencies.add(...this.fileDependencies);
+                this.fileDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
             } else {
                 compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
             }
