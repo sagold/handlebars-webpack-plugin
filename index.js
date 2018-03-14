@@ -48,6 +48,8 @@ class HandlebarsPlugin {
         this.fileDependencies = [];
         this.assetsToEmit = {};
         this.updateData();
+        this.prevTimestamps = {};
+        this.startTime = Date.now();
 
         // register helpers
         const helperMap = helperUtils.resolve(this.options.helpers);
@@ -124,30 +126,18 @@ class HandlebarsPlugin {
      * @return {Boolean} true, if a handlebars file or helper has been updated
      */
     dependenciesUpdated(compilation) {
-        if (compilation.fileTimestamps.has) { // Map
-            // webpack@4.x
-            const changedFiles = [];
+        // NOTE: fileTimestamps will be an `object` or `Map` depending on the webpack version
+        const fileTimestamps = compilation.fileTimestamps;
+        const fileNames = fileTimestamps.has ? Array.from(fileTimestamps.keys()) : Object.keys(fileTimestamps);
 
-            const prevTimestamps = this.prevTimestamps || {};
-            const currentTimestamps = {};
+        const changedFiles = fileNames.filter((watchfile) => {
+            const prevTimestamp = this.prevTimestamps[watchfile];
+            const nextTimestamp = fileTimestamps.has ? fileTimestamps.get(watchfile) : fileTimestamps[watchfile];
+            this.prevTimestamps[watchfile] = nextTimestamp;
+            return (prevTimestamp || this.startTime) < (nextTimestamp || Infinity)
+        });
 
-            compilation.fileTimestamps.forEach((timestamp, watchfile) => {
-                currentTimestamps[watchfile] = timestamp;
-                if ((prevTimestamps[watchfile] || this.startTime) < (currentTimestamps[watchfile] || Infinity)) {
-                    changedFiles.push(watchfile);
-                }
-            });
-
-            this.prevTimestamps = currentTimestamps;
-            return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
-        }
-
-        // webpack@3.x
-        const changedFiles = Object.keys(compilation.fileTimestamps).filter((watchfile) =>
-            (this.prevTimestamps[watchfile] || this.startTime) < (compilation.fileTimestamps[watchfile] || Infinity)
-        );
-
-        return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
+        return changedFiles.length !== 0 && this.containsOwnDependency(changedFiles);
     }
 
     /**
