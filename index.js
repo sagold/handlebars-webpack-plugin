@@ -82,7 +82,6 @@ class HandlebarsPlugin {
             if (this.dependenciesUpdated(compilation) === false) {
                 return done();
             }
-
             this.loadPartials(); // Refresh partials
             this.compileAllEntryFiles(compilation.compiler.outputPath, done); // build all html pages
             return undefined;
@@ -134,10 +133,11 @@ class HandlebarsPlugin {
             const prevTimestamp = this.prevTimestamps[watchfile];
             const nextTimestamp = fileTimestamps.has ? fileTimestamps.get(watchfile) : fileTimestamps[watchfile];
             this.prevTimestamps[watchfile] = nextTimestamp;
-            return (prevTimestamp || this.startTime) < (nextTimestamp || Infinity)
+            return (prevTimestamp || this.startTime) < (nextTimestamp || Infinity);
         });
 
-        return changedFiles.length !== 0 && this.containsOwnDependency(changedFiles);
+        // diff may be zero on initial build, thus also rebuild if there are no changes
+        return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
     }
 
     /**
