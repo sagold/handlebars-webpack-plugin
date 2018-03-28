@@ -1,4 +1,4 @@
-# Webpack handlebars plugin
+<h1 align="center"><img src="./docs/hbs-wp-plugin.png" width="276" alt="handlebars webpack plugin"></h1>
 
 > Server-side template rendering using [Handlebars](http://handlebarsjs.com/).
 
