@@ -78,17 +78,17 @@ class HandlebarsPlugin {
     apply(compiler) {
 
         // COMPILE TEMPLATES
-        compiler.plugin("make", (compilation, done) => {
+        const compile = (compilation, done) => {
             if (this.dependenciesUpdated(compilation) === false) {
                 return done();
             }
             this.loadPartials(); // Refresh partials
             this.compileAllEntryFiles(compilation.compiler.outputPath, done); // build all html pages
             return undefined;
-        });
+        };
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
-        compiler.plugin("emit", (compilation, done) => {
+        const emitDependencies = (compilation, done) => {
             // register dependencies at webpack
             if (compilation.fileDependencies.add) {
                 // webpack@4
@@ -99,7 +99,16 @@ class HandlebarsPlugin {
             // emit generated html pages (webpack-dev-server)
             this.emitGeneratedFiles(compilation);
             return done();
-        });
+        };
+
+        if (compiler.hooks) {
+            compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
+            compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+        } else {
+            // @legacy wp < v4
+            compiler.plugin("make", compile);
+            compiler.plugin("emit", emitDependencies);
+        }
     }
 
     /**
