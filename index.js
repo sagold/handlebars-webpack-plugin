@@ -35,6 +35,7 @@ class HandlebarsPlugin {
             output: null,
             data: {},
             helpers: {},
+            htmlWebpackPlugin: false,
             onBeforeSetup: Function.prototype,
             onBeforeAddPartials: Function.prototype,
             onBeforeCompile: Function.prototype,
@@ -102,8 +103,17 @@ class HandlebarsPlugin {
         };
 
         if (compiler.hooks) {
-            compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
-            compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+            // tap into the webpack html plugin hooks
+            if(this.options.htmlWebpackPlugin) {
+                compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', compilation => {
+                    compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync("HandlebarsRenderPlugin", (_, done) =>  compile(compilation, done));
+                });
+                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+            } else {
+                // use standard compiler hooks
+                compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
+                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+            }
         } else {
             // @legacy wp < v4
             compiler.plugin("make", compile);

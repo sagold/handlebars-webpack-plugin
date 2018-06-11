@@ -39,7 +39,9 @@ var webpackConfig = {
                 nameOfHbsHelper: Function.prototype,
                 projectHelpers: path.join(process.cwd(), "app", "helpers", "*.helper.js")
             },
-
+            // if you want to start rendering handlebars after the html-webpack-plugin
+            // has finished set this to true
+            htmlWebpackPlugin: false,
             // hooks
             onBeforeSetup: function (Handlebars) {},
             onBeforeAddPartials: function (Handlebars, partialsMap) {},
@@ -66,3 +68,37 @@ Use handlebars in your main and partials like, i.e.
 </body>
 ```
 
+
+## Html Webpack Plugin
+
+You can use this plugin to generate a `head.hbs` with the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)
+and use this partial as an input for other handlebar templates.
+
+```js
+plugins: [
+   new HtmlWebpackPlugin({
+      title: 'Generic Head Title',
+      // the output file name
+      filename: path.join(__dirname, 'dist', 'partials', 'head.hbs'),
+      // the head template you want to use
+      template: path.join(__dirname, 'src', 'hbs', 'partials_generate', 'head.hbs'),
+      inject: 'head'
+    }),
+    new HandlebarsPlugin({
+      htmlWebpackPlugin: true,
+      // path to hbs entry file(s)
+      entry: path.join(process.cwd(), 'src', 'hbs', 'site', '*.hbs'),
+      // output path and filename(s). This should lie within the webpacks output-folder
+      // if ommited, the input filepath stripped of its extension will be used
+      // data passed to main hbs template: `main-template(data)`
+      output: path.join(process.cwd(), 'dist', "[name].html"),
+
+      partials: [
+          // the dist folder where the generated hbs file can be found
+          path.join(process.cwd(), 'dist', '*', '*.hbs'),
+          // other partials
+          path.join(process.cwd(), 'src', 'hbs', '*', '*.hbs')
+      ]
+  })
+]
+```
