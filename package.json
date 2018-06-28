@@ -1,6 +1,6 @@
 {
   "name": "handlebars-webpack-plugin",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Renders your html-template on build time",
   "main": "index.js",
   "scripts": {
