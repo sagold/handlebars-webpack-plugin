@@ -44,6 +44,9 @@ class HandlebarsPlugin {
             onDone: Function.prototype
         }, options);
 
+        // setup htmlWebpackPlugin default options and merge user configuration
+        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, options.htmlWebpackPlugin);
+
         this.firstCompilation = true;
         this.options.onBeforeSetup(Handlebars);
         this.fileDependencies = [];
@@ -104,20 +107,21 @@ class HandlebarsPlugin {
 
         if (compiler.hooks) {
             // @feature html-webpack-plugin
-            if (this.options.htmlWebpackPlugin) {
-                const prefix = this.options.htmlWebpackPlugin.prefix || 'html';
+            if (this.options.htmlWebpackPlugin.enabled) {
+                const { prefix } = this.options.htmlWebpackPlugin;
 
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", (compilation) => {
                     compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", (data) => {
                         // @todo used a new partial helper to check for an existing partial
                         // @todo use generate id for consistent name replacements
                         Handlebars.registerPartial(
-                            `${prefix}/${data.outputName.replace(".hbs", "")}`,
+                            `${prefix}/${data.outputName.replace(/\.[^.]*$/, "")}`,
                             data.html
                         );
 
-                        // add source file to file dependencies, to watch for changes in webpack-dev-server
                         try {
+                            // @improve hacky filepath retrieval
+                            // add source file to file dependencies, to watch for changes in webpack-dev-server
                             const sourceFile = data.plugin.options.template.split("!").pop();
                             this.fileDependencies.push(sourceFile);
                         } catch (e) {
