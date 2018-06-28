@@ -103,9 +103,11 @@ class HandlebarsPlugin {
         };
 
         if (compiler.hooks) {
-            // tap into the webpack html plugin hooks
+            // @feature html-webpack-plugin
             if (this.options.htmlWebpackPlugin) {
+                // tap into the webpack html plugin hooks
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", (compilation) => {
+                    // start the handlebars compilation, after the html-webpack-plugin has generated the files
                     compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync(
                         "HandlebarsRenderPlugin",
                         (_, done) => compile(compilation, done)
