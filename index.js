@@ -105,10 +105,10 @@ class HandlebarsPlugin {
         if (compiler.hooks) {
             // tap into the webpack html plugin hooks
             if(this.options.htmlWebpackPlugin) {
-                compiler.hooks.afterEmit.tap('HandlebarsRenderPlugin', compilation => {
+                compiler.hooks.compilation.tap('HtmlWebpackPluginHooks', compilation => {
                     compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync("HandlebarsRenderPlugin", (_, done) =>  compile(compilation, done));
-                    compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync("HandlebarsRenderPlugin", (_, done) =>  emitDependencies(compilation, done));
                 });
+                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
             } else {
                 // use standard compiler hooks
                 compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
