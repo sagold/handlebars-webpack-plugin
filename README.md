@@ -85,7 +85,10 @@ plugins: [
       inject: 'head'
     }),
     new HandlebarsPlugin({
-      htmlWebpackPlugin: true,
+      htmlWebpackPlugin: {
+          /* options */
+          // prefix: 'html' // default is 'html'
+      },
       // path to hbs entry file(s)
       entry: path.join(process.cwd(), 'src', 'hbs', 'site', '*.hbs'),
       // output path and filename(s). This should lie within the webpacks output-folder

@@ -35,7 +35,7 @@ class HandlebarsPlugin {
             output: null,
             data: {},
             helpers: {},
-            htmlWebpackPlugin: false,
+            htmlWebpackPlugin: null,
             onBeforeSetup: Function.prototype,
             onBeforeAddPartials: Function.prototype,
             onBeforeCompile: Function.prototype,
@@ -105,14 +105,14 @@ class HandlebarsPlugin {
         if (compiler.hooks) {
             // @feature html-webpack-plugin
             if (this.options.htmlWebpackPlugin) {
+                const prefix = this.options.htmlWebpackPlugin.prefix || 'html';
 
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", (compilation) => {
                     compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", (data) => {
                         // @todo used a new partial helper to check for an existing partial
                         // @todo use generate id for consistent name replacements
-                        // @todo probably setup an option for the prefixes
                         Handlebars.registerPartial(
-                            `html/${data.outputName.replace(".hbs", "")}`,
+                            `${prefix}/${data.outputName.replace(".hbs", "")}`,
                             data.html
                         );
 
