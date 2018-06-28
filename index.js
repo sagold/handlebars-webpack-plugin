@@ -35,6 +35,7 @@ class HandlebarsPlugin {
             output: null,
             data: {},
             helpers: {},
+            htmlWebpackPlugin: null,
             onBeforeSetup: Function.prototype,
             onBeforeAddPartials: Function.prototype,
             onBeforeCompile: Function.prototype,
@@ -102,8 +103,40 @@ class HandlebarsPlugin {
         };
 
         if (compiler.hooks) {
-            compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
-            compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+            // @feature html-webpack-plugin
+            if (this.options.htmlWebpackPlugin) {
+                const prefix = this.options.htmlWebpackPlugin.prefix || 'html';
+
+                compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", (compilation) => {
+                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", (data) => {
+                        // @todo used a new partial helper to check for an existing partial
+                        // @todo use generate id for consistent name replacements
+                        Handlebars.registerPartial(
+                            `${prefix}/${data.outputName.replace(".hbs", "")}`,
+                            data.html
+                        );
+
+                        // add source file to file dependencies, to watch for changes in webpack-dev-server
+                        try {
+                            const sourceFile = data.plugin.options.template.split("!").pop();
+                            this.fileDependencies.push(sourceFile);
+                        } catch (e) {
+                            log(chalk.red(e));
+                        }
+
+                        return data;
+                    });
+                });
+
+                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (compilation, done) => {
+                    compile(compilation, () => emitDependencies(compilation, done));
+                });
+
+            } else {
+                // use standard compiler hooks
+                compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
+                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+            }
         } else {
             // @legacy wp < v4
             compiler.plugin("make", compile);
