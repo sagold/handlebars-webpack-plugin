@@ -16,39 +16,39 @@ var HandlebarsPlugin = require("handlebars-webpack-plugin");
 
 var webpackConfig = {
 
-    plugins: [
+  plugins: [
 
-        new HandlebarsPlugin({
-            // path to hbs entry file(s)
-            entry: path.join(process.cwd(), "app", "src", "*.hbs"),
-            // output path and filename(s). This should lie within the webpacks output-folder
-            // if ommited, the input filepath stripped of its extension will be used
-            output: path.join(process.cwd(), "build", "[name].html"),
-            // data passed to main hbs template: `main-template(data)`
-            data: require("./app/data/project.json"),
-            // or add it as filepath to rebuild data on change using webpack-dev-server
-            data: path.join(__dirname, "app/data/project.json"),
+    new HandlebarsPlugin({
+      // path to hbs entry file(s)
+      entry: path.join(process.cwd(), "app", "src", "*.hbs"),
+      // output path and filename(s). This should lie within the webpacks output-folder
+      // if ommited, the input filepath stripped of its extension will be used
+      output: path.join(process.cwd(), "build", "[name].html"),
+      // data passed to main hbs template: `main-template(data)`
+      data: require("./app/data/project.json"),
+      // or add it as filepath to rebuild data on change using webpack-dev-server
+      data: path.join(__dirname, "app/data/project.json"),
 
-            // globbed path to partials, where folder/filename is unique
-            partials: [
-                path.join(process.cwd(), "app", "src", "components", "*", "*.hbs")
-            ],
+      // globbed path to partials, where folder/filename is unique
+      partials: [
+        path.join(process.cwd(), "app", "src", "components", "*", "*.hbs")
+      ],
 
-            // register custom helpers. May be either a function or a glob-pattern
-            helpers: {
-                nameOfHbsHelper: Function.prototype,
-                projectHelpers: path.join(process.cwd(), "app", "helpers", "*.helper.js")
-            },
+      // register custom helpers. May be either a function or a glob-pattern
+      helpers: {
+        nameOfHbsHelper: Function.prototype,
+        projectHelpers: path.join(process.cwd(), "app", "helpers", "*.helper.js")
+      },
 
-            // hooks
-            onBeforeSetup: function (Handlebars) {},
-            onBeforeAddPartials: function (Handlebars, partialsMap) {},
-            onBeforeCompile: function (Handlebars, templateContent) {},
-            onBeforeRender: function (Handlebars, data) {},
-            onBeforeSave: function (Handlebars, resultHtml, filename) {},
-            onDone: function (Handlebars, filename) {}
-        })
-    ]
+      // hooks
+      onBeforeSetup: function (Handlebars) {},
+      onBeforeAddPartials: function (Handlebars, partialsMap) {},
+      onBeforeCompile: function (Handlebars, templateContent) {},
+      onBeforeRender: function (Handlebars, data) {},
+      onBeforeSave: function (Handlebars, resultHtml, filename) {},
+      onDone: function (Handlebars, filename) {}
+    })
+  ]
 };
 ```
 
@@ -58,47 +58,50 @@ Use handlebars in your main and partials like, i.e.
 
 ```hbs
 <body>
-    {{> partialFolder/partialName}}
+  {{> partialFolder/partialName}}
 
-    {{> header/header title="page title"}}
+  {{> header/header title="page title"}}
 
-    {{> partial/content}}
+  {{> partial/content}}
 </body>
 ```
 
+
 ## Html Webpack Plugin
 
-You can use this plugin to generate a `head.hbs` with the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)
-and use this partial as an input for other handlebar templates.
+> Use the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) to generate partials, that are
+> dynamically registered to the handlebars-webpack-plugin
+
+- the `HtmlWebpackPlugin` should be placed before the HandlebarsWebpackPlugin
+- multiple HtmlWebpackPlugins may be used
+- per default, the partials get registered to `html/<outputfilename>`, i.e. a filename `/dist/partials/head.hbs` will be registered as `html/head` to handlebars
+
 
 ```js
 plugins: [
    new HtmlWebpackPlugin({
-      title: 'Generic Head Title',
-      // the output file name
-      filename: path.join(__dirname, 'dist', 'partials', 'head.hbs'),
-      // the head template you want to use
-      template: path.join(__dirname, 'src', 'hbs', 'partials_generate', 'head.hbs'),
-      inject: 'head'
-    }),
-    new HandlebarsPlugin({
-      htmlWebpackPlugin: {
-          /* options */
-          // prefix: 'html' // default is 'html'
-      },
-      // path to hbs entry file(s)
-      entry: path.join(process.cwd(), 'src', 'hbs', 'site', '*.hbs'),
-      // output path and filename(s). This should lie within the webpacks output-folder
-      // if ommited, the input filepath stripped of its extension will be used
-      // data passed to main hbs template: `main-template(data)`
-      output: path.join(process.cwd(), 'dist', "[name].html"),
+    title: "Generic Head Title",
+    // the template you want to use
+    template: path.join(__dirname, "src", "generatedpartial", "head.hbs"),
+    // the output file name
+    filename: path.join(__dirname, "dist", "partials", "head.hbs"),
+    inject: "head"
+  }),
 
-      partials: [
-          // the dist folder where the generated hbs file can be found
-          path.join(process.cwd(), 'dist', '*', '*.hbs'),
-          // other partials
-          path.join(process.cwd(), 'src', 'hbs', '*', '*.hbs')
-      ]
+  new HandlebarsWebpackPlugin({
+
+    htmlWebpackPlugin: {
+    enabled: true, // register all partials from html-webpack-plugin, defaults to `false`
+    prefix: "html" // default is "html"
+    },
+
+    entry: path.join(process.cwd(), "src", "hbs", "*.hbs"),
+    output: path.join(process.cwd(), "dist", "[name].html"),
+
+    partials: [
+      path.join(process.cwd(), "dist", "*", "*.hbs"),
+      path.join(process.cwd(), "src", "hbs", "*", "*.hbs")
+    ]
   })
 ]
 ```
