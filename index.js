@@ -137,7 +137,6 @@ class HandlebarsPlugin {
                 compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
                 compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
             }
-
         } else {
             // @legacy wp < v4
             compiler.plugin("make", compile);

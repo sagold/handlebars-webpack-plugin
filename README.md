@@ -39,9 +39,7 @@ var webpackConfig = {
                 nameOfHbsHelper: Function.prototype,
                 projectHelpers: path.join(process.cwd(), "app", "helpers", "*.helper.js")
             },
-            // if you want to start rendering handlebars after the html-webpack-plugin
-            // has finished set this to true
-            htmlWebpackPlugin: false,
+
             // hooks
             onBeforeSetup: function (Handlebars) {},
             onBeforeAddPartials: function (Handlebars, partialsMap) {},
@@ -67,7 +65,6 @@ Use handlebars in your main and partials like, i.e.
     {{> partial/content}}
 </body>
 ```
-
 
 ## Html Webpack Plugin
 
