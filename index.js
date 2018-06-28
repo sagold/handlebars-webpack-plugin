@@ -121,17 +121,12 @@ class HandlebarsPlugin {
                             const sourceFile = data.plugin.options.template.split("!").pop();
                             this.fileDependencies.push(sourceFile);
                         } catch (e) {
-                            console.log(e);
+                            log(chalk.red(e));
                         }
 
                         return data;
                     });
                 });
-
-                // dump all events, to check execution order
-                // Object.keys(compiler.hooks).forEach((hook) => {
-                //     compiler.hooks[hook].tap("HandlebarsRenderPlugin", () => console.log("HOOK:", hook));
-                // });
 
                 compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (compilation, done) => {
                     compile(compilation, () => emitDependencies(compilation, done));
