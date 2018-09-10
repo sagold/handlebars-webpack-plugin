@@ -233,16 +233,28 @@ class HandlebarsPlugin {
      */
     updateData() {
         if (this.options.data && typeof this.options.data === "string") {
-            try {
-                const dataFromFile = JSON.parse(this.readFile(this.options.data));
-                this.addDependency(this.options.data);
-                this.data = dataFromFile;
-            } catch (e) {
-                console.error(`Tried to read ${this.options.data} as json-file and failed. Using it as data source...`);
-                this.data = this.options.data;
-            }
+            this.data = {};
+            const entryFilesArray = glob.sync(this.options.data);
+            entryFilesArray.forEach((filePath) => {
+                this.readDataFile(filePath);
+            });
         } else {
             this.data = this.options.data;
+        }
+    }
+
+    /**
+     * Read a JSON file for input data
+     * @param  {string} filePath    - path to the file
+     */
+    readDataFile(filePath) {
+        try {
+            const dataFromFile = JSON.parse(this.readFile(filePath));
+            this.addDependency(filePath);
+            const dataKey = path.basename(filePath, ".json");
+            this.data[dataKey] = dataFromFile;
+        } catch (e) {
+            console.error(`Tried to read ${filePath} as json-file and failed. Using it as data source...`);
         }
     }
 
