@@ -92,14 +92,14 @@ plugins: [
 
     htmlWebpackPlugin: {
     enabled: true, // register all partials from html-webpack-plugin, defaults to `false`
-    prefix: "html" // default is "html"
+    prefix: "html" // where to look for htmlWebpackPlugin output. default is "html"
     },
 
     entry: path.join(process.cwd(), "src", "hbs", "*.hbs"),
     output: path.join(process.cwd(), "dist", "[name].html"),
 
     partials: [
-      path.join(process.cwd(), "dist", "*", "*.hbs"),
+      path.join(process.cwd(), "html",/* <-- this should match htmlWebpackPlugin.prefix */ "*", "*.hbs"),
       path.join(process.cwd(), "src", "hbs", "*", "*.hbs")
     ]
   })
