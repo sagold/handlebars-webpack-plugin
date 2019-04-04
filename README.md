@@ -41,6 +41,7 @@ var webpackConfig = {
       },
 
       // hooks
+      getTargetFilepath: function (filepath, outputTemplate) {},
       onBeforeSetup: function (Handlebars) {},
       onBeforeAddPartials: function (Handlebars, partialsMap) {},
       onBeforeCompile: function (Handlebars, templateContent) {},
