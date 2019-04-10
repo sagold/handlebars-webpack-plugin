@@ -113,8 +113,10 @@ class HandlebarsPlugin {
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", (compilation) => {
                     compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", (data) => {
                         // @todo used a new partial helper to check for an existing partial
+                        // @todo use generate id for consistent name replacements
+
                         Handlebars.registerPartial(
-                            `${prefix}/${partialUtils.getId(data.outputName)}`,
+                            `${prefix}/${data.outputName.replace(/\.[^.]*$/, "").replace("\\", "/")}`,
                             data.html
                         );
 
