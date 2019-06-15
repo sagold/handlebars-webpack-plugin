@@ -41,7 +41,14 @@ var webpackConfig = {
       },
 
       // hooks
-      getTargetFilepath: function (filepath, outputTemplate) {},
+      /**
+       * Modify the default output path of each entry-template
+       * @param {String} filepath   - the source of the template
+       * @param {String} outputTemplate - the filepath template defined in `output`
+       * @return {String} final path, where the rendered html-file should be saved
+       */
+      // getTargetFilepath: function (filepath, outputTemplate) {},
+      
       onBeforeSetup: function (Handlebars) {},
       onBeforeAddPartials: function (Handlebars, partialsMap) {},
       onBeforeCompile: function (Handlebars, templateContent) {},
