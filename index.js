@@ -46,7 +46,8 @@ class HandlebarsPlugin {
         }, options);
 
         // setup htmlWebpackPlugin default options and merge user configuration
-        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, options.htmlWebpackPlugin.toString() === "true" ? {enabled: true} : options.htmlWebpackPlugin);
+        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" },
+            options.htmlWebpackPlugin && options.htmlWebpackPlugin.toString() === "true" ? {enabled: true} : options.htmlWebpackPlugin);
 
         this.firstCompilation = true;
         this.options.onBeforeSetup(Handlebars);
