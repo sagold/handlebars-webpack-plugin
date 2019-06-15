@@ -157,7 +157,7 @@ class HandlebarsPlugin {
      * @return {String} filecontents
      */
     readFile(filepath) {
-        this.fileDependencies.push(filepath);
+        this.addDependency(filepath);
         return fs.readFileSync(filepath, "utf-8");
     }
 
@@ -166,7 +166,11 @@ class HandlebarsPlugin {
      * @param {...[String]} args    - list of filepaths
      */
     addDependency(...args) {
-        this.fileDependencies.push.apply(this.fileDependencies, args.filter((filename) => filename));
+        if (!args) return;
+        args.forEach(filename => {
+            if (filename && !this.fileDependencies.includes(filename))
+                this.fileDependencies.push(filename);
+        });
     }
 
     /**
