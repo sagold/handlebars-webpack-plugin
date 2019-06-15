@@ -34,6 +34,7 @@ class HandlebarsPlugin {
             entry: null,
             output: null,
             data: {},
+            getTargetFilepath,
             helpers: {},
             htmlWebpackPlugin: null,
             onBeforeSetup: Function.prototype,
@@ -45,7 +46,7 @@ class HandlebarsPlugin {
         }, options);
 
         // setup htmlWebpackPlugin default options and merge user configuration
-        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, options.htmlWebpackPlugin);
+        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, options.htmlWebpackPlugin.toString() === "true" ? {enabled: true} : options.htmlWebpackPlugin);
 
         this.firstCompilation = true;
         this.options.onBeforeSetup(Handlebars);
@@ -278,7 +279,7 @@ class HandlebarsPlugin {
      * @param  {String} outputPath  - webpack output path for build results
      */
     compileEntryFile(sourcePath, outputPath) {
-        let targetFilepath = getTargetFilepath(sourcePath, this.options.output);
+        let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
