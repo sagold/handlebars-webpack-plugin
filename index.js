@@ -85,26 +85,34 @@ class HandlebarsPlugin {
 
         // COMPILE TEMPLATES
         const compile = (compilation, done) => {
-            if (this.dependenciesUpdated(compilation) === false) {
-                return done();
+            try {
+                if (this.dependenciesUpdated(compilation) === false) {
+                    return done();
+                }
+                this.loadPartials(); // Refresh partials
+                this.compileAllEntryFiles(compilation, done); // build all html pages
+                return undefined;
+            } catch (error) {
+                compilation.errors.push(error);
             }
-            this.loadPartials(); // Refresh partials
-            this.compileAllEntryFiles(compilation.compiler.outputPath, done); // build all html pages
-            return undefined;
         };
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
         const emitDependencies = (compilation, done) => {
-            // register dependencies at webpack
-            if (compilation.fileDependencies.add) {
-                // webpack@4
-                this.fileDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
-            } else {
-                compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
+            try {
+                // register dependencies at webpack
+                if (compilation.fileDependencies.add) {
+                    // webpack@4
+                    this.fileDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
+                } else {
+                    compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
+                }
+                // emit generated html pages (webpack-dev-server)
+                this.emitGeneratedFiles(compilation);
+                return done();
+            } catch (error) {
+                compilation.errors.push(error);
             }
-            // emit generated html pages (webpack-dev-server)
-            this.emitGeneratedFiles(compilation);
-            return done();
         };
 
         if (compiler.hooks) {
@@ -256,7 +264,7 @@ class HandlebarsPlugin {
     /**
      * @async
      * Generates all given handlebars templates
-     * @param  {String} outputPath  - webpack output path for build results
+     * @param  {String} compilation  - webpack compilation
      * @param  {Function} done
      */
     compileAllEntryFiles(outputPath, done) {
@@ -265,13 +273,21 @@ class HandlebarsPlugin {
 
         glob(this.options.entry, (err, entryFilesArray) => {
             if (err) {
-                throw err;
-            }
-            if (entryFilesArray.length === 0) {
-                log(chalk.yellow(`no valid entry files found for ${this.options.entry} -- aborting`));
+                compilation.errors.push(error);
+                done();
                 return;
             }
-            entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath, outputPath));
+
+            try {
+                if (entryFilesArray.length === 0) {
+                    log(chalk.yellow(`no valid entry files found for ${this.options.entry} -- aborting`));
+                    return;
+                }
+                entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath, compilation));
+            } catch (error) {
+                compilation.errors.push(error);
+            }
+
             // enforce new line after plugin has finished
             console.log();
 
@@ -285,6 +301,7 @@ class HandlebarsPlugin {
      * @param  {String} outputPath  - webpack output path for build results
      */
     compileEntryFile(sourcePath, outputPath) {
+        try {
         let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
@@ -302,16 +319,17 @@ class HandlebarsPlugin {
             this.assetsToEmit[targetFilepath] = {
                 source: () => result,
                 size: () => result.length
-            };
+            } else {
+                // @legacy: if the filepath lies outside the actual webpack destination folder, simply write that file.
+                // There is no wds-support here, because of watched assets being emitted again
+                fs.outputFileSync(targetFilepath, result, "utf-8");
+            }
 
-        } else {
-            // @legacy: if the filepath lies outside the actual webpack destination folder, simply write that file.
-            // There is no wds-support here, because of watched assets being emitted again
-            fs.outputFileSync(targetFilepath, result, "utf-8");
+            this.options.onDone(Handlebars, targetFilepath);
+            log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
+        } catch (error) {
+            compilation.errors.push(new Error(`${sourcePath}: ${error.message}`));
         }
-
-        this.options.onDone(Handlebars, targetFilepath);
-        log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
 
