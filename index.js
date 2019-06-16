@@ -174,10 +174,14 @@ class HandlebarsPlugin {
      * @param {...[String]} args    - list of filepaths
      */
     addDependency(...args) {
-        if (!args) return;
-        args.forEach(filename => {
-            if (filename && !this.fileDependencies.includes(filename))
+        if (!args) {
+            return;
+        }
+
+        args.forEach((filename) => {
+            if (filename && !this.fileDependencies.includes(filename)) {
                 this.fileDependencies.push(filename);
+            }
         });
     }
 
@@ -207,7 +211,7 @@ class HandlebarsPlugin {
      */
     containsOwnDependency(list) {
         for (let i = 0; i < list.length; i += 1) {
-            if (this.fileDependencies.includes(list[i].replace(/\\/g, '/'))) {
+            if (this.fileDependencies.includes(list[i].replace(/\\/g, "/"))) {
                 return true;
             }
         }
@@ -267,13 +271,13 @@ class HandlebarsPlugin {
      * @param  {String} compilation  - webpack compilation
      * @param  {Function} done
      */
-    compileAllEntryFiles(outputPath, done) {
+    compileAllEntryFiles(compilation, done) {
 
         this.updateData();
 
-        glob(this.options.entry, (err, entryFilesArray) => {
-            if (err) {
-                compilation.errors.push(error);
+        glob(this.options.entry, (globError, entryFilesArray) => {
+            if (globError) {
+                compilation.errors.push(globError);
                 done();
                 return;
             }
@@ -283,7 +287,13 @@ class HandlebarsPlugin {
                     log(chalk.yellow(`no valid entry files found for ${this.options.entry} -- aborting`));
                     return;
                 }
-                entryFilesArray.forEach((filepath) => this.compileEntryFile(filepath, compilation));
+                entryFilesArray.forEach((sourcePath) => {
+                    try {
+                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath);
+                    } catch (error) {
+                        compilation.errors.push(new Error(`${sourcePath}: ${error.message}`));
+                    }
+                });
             } catch (error) {
                 compilation.errors.push(error);
             }
@@ -301,7 +311,6 @@ class HandlebarsPlugin {
      * @param  {String} outputPath  - webpack output path for build results
      */
     compileEntryFile(sourcePath, outputPath) {
-        try {
         let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
@@ -313,23 +322,22 @@ class HandlebarsPlugin {
         let result = template(data);
         result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;
 
-        if (targetFilepath.includes(outputPath.replace(/\\/g, '/'))) {
+        if (targetFilepath.includes(outputPath.replace(/\\/g, "/"))) {
             // change the destination path relative to webpacks output folder and emit it via webpack
-            targetFilepath = targetFilepath.replace(outputPath.replace(/\\/g, '/'), "").replace(/^\/*/, "");
+            targetFilepath = targetFilepath.replace(outputPath.replace(/\\/g, "/"), "").replace(/^\/*/, "");
             this.assetsToEmit[targetFilepath] = {
                 source: () => result,
                 size: () => result.length
-            } else {
-                // @legacy: if the filepath lies outside the actual webpack destination folder, simply write that file.
-                // There is no wds-support here, because of watched assets being emitted again
-                fs.outputFileSync(targetFilepath, result, "utf-8");
-            }
+            };
 
-            this.options.onDone(Handlebars, targetFilepath);
-            log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
-        } catch (error) {
-            compilation.errors.push(new Error(`${sourcePath}: ${error.message}`));
+        } else {
+            // @legacy: if the filepath lies outside the actual webpack destination folder, simply write that file.
+            // There is no wds-support here, because of watched assets being emitted again
+            fs.outputFileSync(targetFilepath, result, "utf-8");
         }
+
+        this.options.onDone(Handlebars, targetFilepath);
+        log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
 
