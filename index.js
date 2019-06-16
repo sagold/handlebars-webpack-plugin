@@ -6,24 +6,12 @@ const Handlebars = require("handlebars");
 const glob = require("glob");
 const path = require("path");
 const log = require("./utils/log");
+const getTargetFilepath = require("./utils/getTargetFilepath");
 
 
-/**
- * Returns the target filepath of a handlebars template
- * @param  {String} filepath            - input filepath
- * @param  {String} [outputTemplate]    - template for output filename.
- *                                          If ommited, the same filename stripped of its extension will be used
- * @return {String} target filepath
- */
-function getTargetFilepath(filepath, outputTemplate) {
-    if (outputTemplate == null) {
-        return filepath.replace(path.extname(filepath), "");
-    }
-
-    const fileName = path
-        .basename(filepath)
-        .replace(path.extname(filepath), "");
-    return outputTemplate.replace("[name]", fileName);
+function sanitizePath(filepath) {
+    // convert windows path
+    return filepath.replace(/\\/g, "/");
 }
 
 
@@ -34,10 +22,10 @@ class HandlebarsPlugin {
             entry: null,
             output: null,
             data: {},
-            getTargetFilepath,
-            getPartialId: partialUtils.getDefaultId,
             helpers: {},
             htmlWebpackPlugin: null,
+            getTargetFilepath,
+            getPartialId: partialUtils.getDefaultId,
             onBeforeSetup: Function.prototype,
             onBeforeAddPartials: Function.prototype,
             onBeforeCompile: Function.prototype,
@@ -47,8 +35,12 @@ class HandlebarsPlugin {
         }, options);
 
         // setup htmlWebpackPlugin default options and merge user configuration
-        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" },
-            options.htmlWebpackPlugin && options.htmlWebpackPlugin.toString() === "true" ? {enabled: true} : options.htmlWebpackPlugin);
+        let htmlWebpackPluginOptions = options.htmlWebpackPlugin;
+        if (htmlWebpackPluginOptions && htmlWebpackPluginOptions.toString() === "true") {
+            htmlWebpackPluginOptions = { enabled: true };
+        }
+
+        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, htmlWebpackPluginOptions);
 
         this.firstCompilation = true;
         this.options.onBeforeSetup(Handlebars);
@@ -92,10 +84,10 @@ class HandlebarsPlugin {
                 }
                 this.loadPartials(); // Refresh partials
                 this.compileAllEntryFiles(compilation, done); // build all html pages
-                return undefined;
             } catch (error) {
                 compilation.errors.push(error);
             }
+            return undefined; // done();?
         };
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
@@ -114,8 +106,10 @@ class HandlebarsPlugin {
             } catch (error) {
                 compilation.errors.push(error);
             }
+            return undefined; // done();?
         };
 
+        // @wp >= 4
         if (compiler.hooks) {
             // @feature html-webpack-plugin
             if (this.options.htmlWebpackPlugin.enabled) {
@@ -127,7 +121,7 @@ class HandlebarsPlugin {
                         // @todo use generate id for consistent name replacements
 
                         Handlebars.registerPartial(
-                            `${prefix}/${data.outputName.replace(/\.[^.]*$/, "").replace("\\", "/")}`,
+                            `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
                             data.html
                         );
 
@@ -212,7 +206,8 @@ class HandlebarsPlugin {
      */
     containsOwnDependency(list) {
         for (let i = 0; i < list.length; i += 1) {
-            if (this.fileDependencies.includes(list[i].replace(/\\/g, "/"))) {
+            const filepath = sanitizePath(list[i]);
+            if (this.fileDependencies.includes(filepath)) {
                 return true;
             }
         }
@@ -312,6 +307,8 @@ class HandlebarsPlugin {
      * @param  {String} outputPath  - webpack output path for build results
      */
     compileEntryFile(sourcePath, outputPath) {
+        outputPath = sanitizePath(outputPath);
+
         let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
@@ -323,9 +320,9 @@ class HandlebarsPlugin {
         let result = template(data);
         result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;
 
-        if (targetFilepath.includes(outputPath.replace(/\\/g, "/"))) {
+        if (targetFilepath.includes(outputPath)) {
             // change the destination path relative to webpacks output folder and emit it via webpack
-            targetFilepath = targetFilepath.replace(outputPath.replace(/\\/g, "/"), "").replace(/^\/*/, "");
+            targetFilepath = targetFilepath.replace(outputPath, "").replace(/^\/*/, "");
             this.assetsToEmit[targetFilepath] = {
                 source: () => result,
                 size: () => result.length
