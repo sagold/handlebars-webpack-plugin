@@ -11,10 +11,10 @@
 In your webpack config register and setup the handlebars plugin
 
 ```javascript
-var path = require("path");
-var HandlebarsPlugin = require("handlebars-webpack-plugin");
+const path = require("path");
+const HandlebarsPlugin = require("handlebars-webpack-plugin");
 
-var webpackConfig = {
+const webpackConfig = {
 
   plugins: [
 
@@ -49,6 +49,13 @@ var webpackConfig = {
        */
       // getTargetFilepath: function (filepath, outputTemplate) {},
       
+      /**
+       * Modify the hbs partial-id created for a loaded partial
+       * @param {String} filePath   - filePath to the loaded partial
+       * @return {String} hbs-partialId, per default folder/partialName is used
+       */
+      // getPartialId: function (filePath) {}
+
       onBeforeSetup: function (Handlebars) {},
       onBeforeAddPartials: function (Handlebars, partialsMap) {},
       onBeforeCompile: function (Handlebars, templateContent) {},
@@ -113,3 +120,5 @@ plugins: [
   })
 ]
 ```
+
+#
