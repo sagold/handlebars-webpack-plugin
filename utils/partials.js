@@ -4,11 +4,11 @@ const chalk = require("chalk");
 const log = require("./log");
 
 
-function getId(path) {
+function getDefaultId(path) {
     return path.match(/\/([^/]+\/[^/]+)\.[^.]+$/).pop();
 }
 
-function resolve(Handlebars, partialsGlob) {
+function resolve(Handlebars, partialsGlob, getId) {
     let partials = [];
 
     if (partialsGlob == null) {
@@ -36,8 +36,7 @@ function addMap(Handlebars, partialMap) {
 
 
 module.exports = {
-
-    getId,
+    getDefaultId,
     resolve,
     addMap
 };
