@@ -41,21 +41,8 @@ const webpackConfig = {
       },
 
       // hooks
-      /**
-       * Modify the default output path of each entry-template
-       * @param {String} filepath   - the source of the template
-       * @param {String} outputTemplate - the filepath template defined in `output`
-       * @return {String} final path, where the rendered html-file should be saved
-       */
       // getTargetFilepath: function (filepath, outputTemplate) {},
-      
-      /**
-       * Modify the hbs partial-id created for a loaded partial
-       * @param {String} filePath   - filePath to the loaded partial
-       * @return {String} hbs-partialId, per default folder/partialName is used
-       */
       // getPartialId: function (filePath) {}
-
       onBeforeSetup: function (Handlebars) {},
       onBeforeAddPartials: function (Handlebars, partialsMap) {},
       onBeforeCompile: function (Handlebars, templateContent) {},
@@ -82,7 +69,55 @@ Use handlebars in your main and partials like, i.e.
 ```
 
 
-## Html Webpack Plugin
+## Options
+
+### target filepaths
+
+Per default, the generated filepath of the html-results is defined by the `output`-property in the plugin-options. To changed the output folder and name, you can pass your custom filepath-helper to the plugin-options like
+
+```javascript
+{
+    /**
+     * Modify the default output path of each entry-template
+     * @param {String} filepath   - the source of the template
+     * @param {String} outputTemplate - the filepath template defined in `output`
+     * @return {String} final path, where the rendered html-file should be saved
+     */
+    getTargetFilepath: function getTargetFilepath(filepath, outputTemplate) {
+        const fileName = path.basename(filepath).replace(path.extname(filepath), "");
+        return outputTemplate.replace("[name]", fileName);
+    };
+}
+```
+
+You can find the default implementation in [utils/getTargetFilepath](./utils/getTargetFilepath.js).
+
+
+### partial ids
+
+Per default, partials are identified with `folder/filename` in a hbs-template. e.g. a file in `app/partials/page/header.hbs` will be registered under `page/header` and can be included with
+
+```hbs
+{{> page/header title="page title"}}
+```
+
+To change the partial's id you can pass a custom partial-generator to the plugin-options like
+
+```javascript
+{
+    /**
+     * Modify the hbs partial-id created for a loaded partial
+     * @param {String} filePath   - filePath to the loaded partial
+     * @return {String} hbs-partialId, per default folder/partialName is used
+     */
+    getPartialId: function (filePath) {
+        return path.match(/\/([^/]+\/[^/]+)\.[^.]+$/).pop();
+    }
+}
+```
+
+
+### Html Webpack Plugin
 
 > Use the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) to generate partials, that are
 > dynamically registered to the handlebars-webpack-plugin
@@ -120,6 +155,7 @@ plugins: [
   })
 ]
 ```
+
 
 ## Contributors
 
@@ -176,6 +212,11 @@ plugins: [
 <a href="https://github.com/patrikniebur">
     <img width="80" height="80" style="max-width:100%;" 
         title="patrikniebur" src="https://avatars0.githubusercontent.com/u/6452693?s=460&v=4">
+</a>
+
+<a href="https://github.com/mitchheddles">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="mitchheddles" src="https://avatars2.githubusercontent.com/u/20656128?s=460&v=4">
 </a>
 
 
