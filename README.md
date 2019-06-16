@@ -121,4 +121,61 @@ plugins: [
 ]
 ```
 
-#
+## Contributors
+
+<a href="https://github.com/TheReincarnator">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="TheReincarnator" src="https://avatars0.githubusercontent.com/u/840370?s=460&v=4">
+</a>
+
+<a href="https://github.com/muuki88">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="muuki88" src="https://avatars2.githubusercontent.com/u/647727?s=460&v=4">
+</a>
+
+<a href="https://github.com/emilchristensen">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="emilchristensen" src="https://avatars3.githubusercontent.com/u/575486?s=460&v=4">
+</a>
+
+<a href="https://github.com/alisonailea">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="alisonailea" src="https://avatars2.githubusercontent.com/u/3362490?s=460&v=4">
+</a>
+
+<a href="https://github.com/vredondoGL">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="vredondoGL" src="https://avatars3.githubusercontent.com/u/35344609?s=460&v=4">
+</a>
+
+<a href="https://github.com/mkungla">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="mkungla" src="https://avatars2.githubusercontent.com/u/15878458?s=460&v=4">
+</a>
+
+<a href="https://github.com/bywo">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="bywo" src="https://avatars2.githubusercontent.com/u/1434481?s=460&v=4">
+</a>
+
+<a href="https://github.com/baldurh">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="baldurh" src="https://avatars3.githubusercontent.com/u/1823617?s=460&v=4">
+</a>
+
+<a href="https://github.com/DannyDelott">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="DannyDelott" src="https://avatars3.githubusercontent.com/u/4524175?s=460&v=4">
+</a>
+
+<a href="https://github.com/amandabouveng">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="amandabouveng" src="https://avatars2.githubusercontent.com/u/15197360?s=460&v=4">
+</a>
+
+<a href="https://github.com/patrikniebur">
+    <img width="80" height="80" style="max-width:100%;" 
+        title="patrikniebur" src="https://avatars0.githubusercontent.com/u/6452693?s=460&v=4">
+</a>
+
+
