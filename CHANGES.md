@@ -1,3 +1,14 @@
+# v1.6.0 - 19/06/16
+
+- Fix windows filepaths
+- Add hooks for custom partialId and targetFilePath
+- Fix error-reporting for wds
+- Fix wds support for windows
+- minor fixes
+- changed license to MIT
+
+# ...
+
 # v1.2.0 - 17/05/13
 
 - Add optional output folder
