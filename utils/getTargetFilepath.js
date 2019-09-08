@@ -1,4 +1,5 @@
 const path = require("path");
+const sanitizePath = require("./sanitizePath");
 
 
 /**
@@ -9,6 +10,8 @@ const path = require("path");
  * @return {String} target filepath
  */
 module.exports = function getTargetFilepath(filepath, outputTemplate) {
+    filepath = sanitizePath(filepath);
+
     if (outputTemplate == null) {
         return filepath.replace(path.extname(filepath), "");
     }
@@ -16,5 +19,6 @@ module.exports = function getTargetFilepath(filepath, outputTemplate) {
     const fileName = path
         .basename(filepath)
         .replace(path.extname(filepath), "");
+
     return outputTemplate.replace("[name]", fileName);
 };

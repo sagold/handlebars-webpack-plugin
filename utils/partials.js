@@ -15,12 +15,12 @@ function resolve(Handlebars, partialsGlob, getId) {
         return {};
     }
 
-    partialsGlob.forEach((partialGlob) => {
+    partialsGlob.forEach(partialGlob => {
         partials = partials.concat(glob.sync(partialGlob));
     });
 
     const partialMap = {};
-    partials.forEach((path) => {
+    partials.forEach(path => {
         partialMap[getId(path)] = path;
     });
 
@@ -28,7 +28,7 @@ function resolve(Handlebars, partialsGlob, getId) {
 }
 
 function addMap(Handlebars, partialMap) {
-    Object.keys(partialMap).forEach((partialId) => {
+    Object.keys(partialMap).forEach(partialId => {
         log(chalk.gray(`+ partial '${partialId}'`));
         Handlebars.registerPartial(partialId, fs.readFileSync(partialMap[partialId], "utf8"));
     });

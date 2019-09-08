@@ -7,12 +7,7 @@ const glob = require("glob");
 const path = require("path");
 const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
-
-
-function sanitizePath(filepath) {
-    // convert windows path
-    return filepath.replace(/\\/g, "/");
-}
+const sanitizePath = require("./utils/sanitizePath.js");
 
 
 class HandlebarsPlugin {
@@ -52,7 +47,7 @@ class HandlebarsPlugin {
 
         // register helpers
         const helperMap = helperUtils.resolve(this.options.helpers);
-        helperMap.forEach((helper) => {
+        helperMap.forEach(helper => {
             helperUtils.register(Handlebars, helper.id, helper.helperFunction);
             this.addDependency(helper.filepath);
         });
@@ -67,7 +62,7 @@ class HandlebarsPlugin {
         this.options.onBeforeAddPartials(Handlebars, partials);
         partialUtils.addMap(Handlebars, partials);
         // watch all partials for changes
-        this.addDependency.apply(this, Object.keys(partials).map((key) => partials[key]));
+        this.addDependency.apply(this, Object.keys(partials).map(key => partials[key]));
     }
 
     /**
@@ -115,8 +110,8 @@ class HandlebarsPlugin {
             if (this.options.htmlWebpackPlugin.enabled) {
                 const { prefix } = this.options.htmlWebpackPlugin;
 
-                compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", (compilation) => {
-                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", (data) => {
+                compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
+                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", data => {
                         // @todo used a new partial helper to check for an existing partial
                         // @todo use generate id for consistent name replacements
 
@@ -173,7 +168,7 @@ class HandlebarsPlugin {
             return;
         }
 
-        args.forEach((filename) => {
+        args.forEach(filename => {
             if (filename && !this.fileDependencies.includes(filename)) {
                 this.fileDependencies.push(filename);
             }
@@ -189,7 +184,7 @@ class HandlebarsPlugin {
         const fileTimestamps = compilation.fileTimestamps;
         const fileNames = fileTimestamps.has ? Array.from(fileTimestamps.keys()) : Object.keys(fileTimestamps);
 
-        const changedFiles = fileNames.filter((watchfile) => {
+        const changedFiles = fileNames.filter(watchfile => {
             const prevTimestamp = this.prevTimestamps[watchfile];
             const nextTimestamp = fileTimestamps.has ? fileTimestamps.get(watchfile) : fileTimestamps[watchfile];
             this.prevTimestamps[watchfile] = nextTimestamp;
@@ -238,7 +233,7 @@ class HandlebarsPlugin {
      * @param  {Compilation} compilation
      */
     emitGeneratedFiles(compilation) {
-        Object.keys(this.assetsToEmit).forEach((filename) => {
+        Object.keys(this.assetsToEmit).forEach(filename => {
             compilation.assets[filename] = this.assetsToEmit[filename];
         });
     }
@@ -283,7 +278,7 @@ class HandlebarsPlugin {
                     log(chalk.yellow(`no valid entry files found for ${this.options.entry} -- aborting`));
                     return;
                 }
-                entryFilesArray.forEach((sourcePath) => {
+                entryFilesArray.forEach(sourcePath => {
                     try {
                         this.compileEntryFile(sourcePath, compilation.compiler.outputPath);
                     } catch (error) {
