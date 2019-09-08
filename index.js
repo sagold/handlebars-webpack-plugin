@@ -12,15 +12,18 @@ const sanitizePath = require("./utils/sanitizePath.js");
 
 class HandlebarsPlugin {
 
-    constructor(options) {
+    constructor(options = {}) {
         this.options = Object.assign({
             entry: null,
             output: null,
             data: {},
             helpers: {},
             htmlWebpackPlugin: null,
+            // make filepath retrieval customizable
             getTargetFilepath,
+            // make partial-id generator customizable
             getPartialId: partialUtils.getDefaultId,
+            // lifecycle hooks
             onBeforeSetup: Function.prototype,
             onBeforeAddPartials: Function.prototype,
             onBeforeCompile: Function.prototype,
@@ -44,8 +47,10 @@ class HandlebarsPlugin {
         this.updateData();
         this.prevTimestamps = {};
         this.startTime = Date.now();
+        this.loadHelpers();
+    }
 
-        // register helpers
+    loadHelpers() {
         const helperMap = helperUtils.resolve(this.options.helpers);
         helperMap.forEach(helper => {
             helperUtils.register(Handlebars, helper.id, helper.helperFunction);

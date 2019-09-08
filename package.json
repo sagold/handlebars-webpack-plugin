@@ -39,11 +39,13 @@
   "devDependencies": {
     "ava": "^2.3.0",
     "eslint": "^3.10.2",
-    "pre-push": "^0.1.1"
+    "pre-push": "^0.1.1",
+    "sinon": "^7.4.2"
   },
   "ava": {
     "files": [
       "test/**/*.test.js"
-    ]
+    ],
+    "verbose": true
   }
 }
