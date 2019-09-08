@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "ava": "^2.3.0",
-    "eslint": "^3.10.2",
+    "eslint": "4.x",
     "pre-push": "^0.1.1",
     "sinon": "^7.4.2"
   },
