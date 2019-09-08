@@ -309,7 +309,33 @@ class HandlebarsPlugin {
     compileEntryFile(sourcePath, outputPath) {
         outputPath = sanitizePath(outputPath);
 
-        let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output);
+        const domen = this.options.entry.split('*')[0];
+        // array of all path elements except the relative ones (**|*)
+        const rootArray = domen.split(path.sep);
+        const rootFolderName = rootArray[rootArray.length - 2];
+        const partials = this.options.partials;
+
+        if (partials) {
+            let isPartialsPath = false;
+
+            partials.forEach((partial) => {
+                const partialRootIndex = partial.split(path.sep).indexOf(rootFolderName) + 1;
+                // partial folder name
+                const partialFolderName = partial.split(path.sep)[partialRootIndex];
+                // current source folder name
+                const folderName = path.dirname(sourcePath).split(path.sep)[partialRootIndex];
+                // ignore partial
+                if (folderName === partialFolderName) {
+                    isPartialsPath = true;
+                }
+            });
+
+            if (isPartialsPath) {
+                return;
+            }
+        }
+
+        let targetFilepath = this.options.getTargetFilepath(sourcePath, rootFolderName, this.options.output);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
