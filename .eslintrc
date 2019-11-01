@@ -4,7 +4,7 @@
         "node": true
     },
     "parserOptions": {
-        "ecmaVersion": 6,
+        "ecmaVersion": 8,
         "sourceType": "module"
     },
     "rules": {
@@ -188,7 +188,7 @@
         "indent": [2, 4, {"SwitchCase": 1 }],
         "quotes": [2, "double", "avoid-escape"],
         "arrow-body-style": [2, "as-needed"],
-        "arrow-parens": [2, "always"],
+        "arrow-parens": [2, "as-needed"],
         "arrow-spacing": [2, { "before": true, "after": true } ],
         "constructor-super": 2,
         "generator-star-spacing": [2, { "before": false, "after": true }],

@@ -4,8 +4,13 @@
   "description": "Renders your html-template on build time",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "ava"
   },
+  "pre-push": [
+    "lint",
+    "test"
+  ],
   "repository": {
     "type": "git",
     "url": "https://sagold@github.com/sagold/handlebars-webpack-plugin.git"
@@ -32,6 +37,15 @@
     "handlebars": "^4.0.3"
   },
   "devDependencies": {
-    "eslint": "^3.10.2"
+    "ava": "^2.3.0",
+    "eslint": "4.x",
+    "pre-push": "^0.1.1",
+    "sinon": "^7.4.2"
+  },
+  "ava": {
+    "files": [
+      "test/**/*.test.js"
+    ],
+    "verbose": true
   }
 }

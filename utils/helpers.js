@@ -8,6 +8,7 @@ function getId(filepath) {
     return id.replace(/\.?helper\.?/, "");
 }
 
+
 function register(Handlebars, id, fun) { // eslint-disable-line no-shadow
     if (Handlebars.helpers[id]) {
         log(chalk.yellow(`The helper '${id}' is already registered.
@@ -17,6 +18,7 @@ function register(Handlebars, id, fun) { // eslint-disable-line no-shadow
     }
     Handlebars.registerHelper(id, fun);
 }
+
 
 /**
  * Resolves the helpers config to a map with id, filepath and the corresponding helper-function
@@ -29,11 +31,11 @@ function resolve(query) {
 
     Object
         .keys(query)
-        .forEach((helperId) => {
+        .forEach(helperId => {
             // globbed paths
             if (typeof query[helperId] === "string") {
                 const foundHelpers = glob.sync(query[helperId]);
-                foundHelpers.forEach((pathToHelper) => {
+                foundHelpers.forEach(pathToHelper => {
                     resolvedHelpers.push({
                         id: getId(pathToHelper),
                         filepath: pathToHelper,
