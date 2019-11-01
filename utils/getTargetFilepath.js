@@ -11,6 +11,7 @@ const sanitizePath = require("./sanitizePath");
  */
 module.exports = function getTargetFilepath(filePath, rootPath, outputTemplate) {
     filePath = sanitizePath(filePath);
+    rootPath = sanitizePath(rootPath);
 
     if (outputTemplate == null) {
         return filePath.replace(path.extname(filePath), "");
