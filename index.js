@@ -315,7 +315,7 @@ class HandlebarsPlugin {
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
         // create template
         const template = Handlebars.compile(templateContent);
-        const data = this.options.onBeforeRender(Handlebars, this.data) || this.data;
+        const data = this.options.onBeforeRender(Handlebars, this.data, sourcePath) || this.data;
         // compile template
         let result = template(data);
         result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;

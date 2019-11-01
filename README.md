@@ -46,7 +46,7 @@ const webpackConfig = {
       onBeforeSetup: function (Handlebars) {},
       onBeforeAddPartials: function (Handlebars, partialsMap) {},
       onBeforeCompile: function (Handlebars, templateContent) {},
-      onBeforeRender: function (Handlebars, data) {},
+      onBeforeRender: function (Handlebars, data, filename) {},
       onBeforeSave: function (Handlebars, resultHtml, filename) {},
       onDone: function (Handlebars, filename) {}
     })
