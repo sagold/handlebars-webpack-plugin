@@ -287,7 +287,7 @@ class HandlebarsPlugin {
                     try {
                         this.compileEntryFile(sourcePath, compilation.compiler.outputPath);
                     } catch (error) {
-                        compilation.errors.push(new Error(`${sourcePath}: ${error.message}`));
+                        compilation.errors.push(new Error(`${sourcePath}: ${error.message}\n${error.stack}`));
                     }
                 });
             } catch (error) {
