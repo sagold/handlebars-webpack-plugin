@@ -24,6 +24,9 @@ const webpackConfig = {
       // output path and filename(s). This should lie within the webpacks output-folder
       // if ommited, the input filepath stripped of its extension will be used
       output: path.join(process.cwd(), "build", "[name].html"),
+      // you can als add a [path] variable, which will emit the files with their relative path, like
+      // output: path.join(process.cwd(), "build", [path], "[name].html"),
+      
       // data passed to main hbs template: `main-template(data)`
       data: require("./app/data/project.json"),
       // or add it as filepath to rebuild data on change using webpack-dev-server
@@ -79,11 +82,12 @@ Per default, the generated filepath of the html-results is defined by the `outpu
 {
     /**
      * Modify the default output path of each entry-template
-     * @param {String} filepath   - the source of the template
+     * @param {String} filepath     - the source of the template
      * @param {String} outputTemplate - the filepath template defined in `output`
+     * @param {String} rootFolder   - the filepaths rootFolder
      * @return {String} final path, where the rendered html-file should be saved
      */
-    getTargetFilepath: function getTargetFilepath(filepath, outputTemplate) {
+    getTargetFilepath: function getTargetFilepath(filepath, outputTemplate, rootFolder) {
         const fileName = path.basename(filepath).replace(path.extname(filepath), "");
         return outputTemplate.replace("[name]", fileName);
     };
