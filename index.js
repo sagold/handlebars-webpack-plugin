@@ -8,6 +8,7 @@ const path = require("path");
 const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
 const sanitizePath = require("./utils/sanitizePath.js");
+const getRootFolder = require("./utils/getRootFolder");
 
 
 class HandlebarsPlugin {
@@ -309,41 +310,14 @@ class HandlebarsPlugin {
     compileEntryFile(sourcePath, outputPath) {
         outputPath = sanitizePath(outputPath);
 
-        const domen = this.options.entry.split('*')[0];
-        // array of all path elements except the relative ones (**|*)
-        const rootArray = domen.split(path.sep);
-        const rootFolderName = rootArray[rootArray.length - 2];
-        const partials = this.options.partials;
+        let rootFolderName = path.dirname(sourcePath);
 
-        if (partials) {
-            let isPartialsPath = false;
+        if (this.options.output.includes("[path]")) {
+            rootFolderName = getRootFolder(sourcePath, this.options.entry, this.options.partials);
+        }
 
-            // ignore partials paths
-            partials.forEach((partial) => {
-                let partialRootIndex = null;
-
-                // find parent folder for relatives (**|*)
-                if (partial.split(path.sep).indexOf('**') !== -1) {
-                    partialRootIndex = partial.split(path.sep).indexOf('**') - 1;
-                } else if (partial.split(path.sep).indexOf('*') !== -1) {
-                    partialRootIndex = partial.split(path.sep).indexOf('*') - 1;
-                }
-
-                if (partialRootIndex) {
-                    // partial folder name
-                    const partialFolderName = partial.split(path.sep)[partialRootIndex];
-                    // current source folder name
-                    const folderName = path.dirname(sourcePath).split(path.sep)[partialRootIndex];
-                    // ignore partial
-                    if (folderName === partialFolderName) {
-                        isPartialsPath = true;
-                    }
-                }
-            });
-
-            if (isPartialsPath) {
-                return;
-            }
+        if (rootFolderName === false) {
+            return;
         }
 
         let targetFilepath = this.options.getTargetFilepath(sourcePath, rootFolderName, this.options.output);
