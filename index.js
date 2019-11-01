@@ -315,6 +315,7 @@ class HandlebarsPlugin {
             rootFolderName = getRootFolder(sourcePath, this.options.entry, this.options.partials);
         }
         if (rootFolderName === false) {
+            compilation.errors.push(new Error(`${sourcePath}: is ignored`));
             return;
         }
 
