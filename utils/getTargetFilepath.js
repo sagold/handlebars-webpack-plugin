@@ -25,5 +25,7 @@ module.exports = function getTargetFilepath(filePath, rootPath, outputTemplate) 
         .basename(filePath)
         .replace(path.extname(filePath), "");
 
-    return outputTemplate.replace("[name]", path.join(folderPath, fileName));
+    return outputTemplate
+        .replace("[path]", folderPath)
+        .replace("[name]", fileName);
 };
