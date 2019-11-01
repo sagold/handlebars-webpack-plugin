@@ -117,6 +117,7 @@ To change the partial's id you can pass a custom partial-generator to the plugin
 ```
 
 
+
 ### Html Webpack Plugin
 
 > Use the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) to generate partials, that are
@@ -155,6 +156,26 @@ plugins: [
   })
 ]
 ```
+
+
+## Utilities
+
+### Merging input-data
+
+In case you have several json-files that need to be passed to handlebars-compilation, you can build this within your webpack-configuration file. A simple helper can be found in [utils/mergeJSON.js](./utils/mergeJSON.js), 
+which finds all json files and build a dataObject with `{ <filename>: <data> }`. Example:
+
+```js
+const mergeJSON = require('handlebars-webpack-plugin/utils/mergeJSON');
+const projectData = mergeJSON(path.join(__dirname, "data/**/*.json"));
+// ...
+new HandlebarsPlugin({
+    // ...
+    data: projectData
+});
+```
+
+For custom merge behaviour you can add your own merge-helper, following the implementation from [utils/mergeJSON.js](./utils/mergeJSON.js).
 
 
 ## Contributors
