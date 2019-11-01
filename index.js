@@ -311,16 +311,14 @@ class HandlebarsPlugin {
         outputPath = sanitizePath(outputPath);
 
         let rootFolderName = path.dirname(sourcePath);
-
         if (this.options.output.includes("[path]")) {
             rootFolderName = getRootFolder(sourcePath, this.options.entry, this.options.partials);
         }
-
         if (rootFolderName === false) {
             return;
         }
 
-        let targetFilepath = this.options.getTargetFilepath(sourcePath, rootFolderName, this.options.output);
+        let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output, rootFolderName);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
