@@ -3,22 +3,29 @@ const sanitizePath = require("./sanitizePath");
 
 
 /**
- * Returns the target filepath of a handlebars template
- * @param  {String} filepath            - input filepath
- * @param  {String} [outputTemplate]    - template for output filename.
- *                                          If ommited, the same filename stripped of its extension will be used
- * @return {String} target filepath
+ * Returns the target filePath of a handlebars template
+ * @param  {String} filePath            - input filePath
+ * @param  {String} [outputTemplate]    - template for output filename. If ommited, the same filename stripped of its extension will be used
+ * @param  {String} [rootPath]            - input rootPath
+ * @return {String} target filePath
  */
-module.exports = function getTargetFilepath(filepath, outputTemplate) {
-    filepath = sanitizePath(filepath);
+module.exports = function getTargetFilepath(filePath, outputTemplate, rootPath) {
+    filePath = sanitizePath(filePath);
+    rootPath = rootPath ? sanitizePath(rootPath) : path.dirname(filePath);
 
     if (outputTemplate == null) {
-        return filepath.replace(path.extname(filepath), "");
+        return filePath.replace(path.extname(filePath), "");
     }
 
-    const fileName = path
-        .basename(filepath)
-        .replace(path.extname(filepath), "");
+    const folderPath = path
+        .dirname(filePath)
+        .split(rootPath)[1];
 
-    return outputTemplate.replace("[name]", fileName);
+    const fileName = path
+        .basename(filePath)
+        .replace(path.extname(filePath), "");
+
+    return outputTemplate
+        .replace("[path]", folderPath)
+        .replace("[name]", fileName);
 };

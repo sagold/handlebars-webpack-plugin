@@ -19,11 +19,14 @@ const webpackConfig = {
   plugins: [
 
     new HandlebarsPlugin({
-      // path to hbs entry file(s)
+      // path to hbs entry file(s). Also supports nested directories if write path.join(process.cwd(), "app", "src", "**", "*.hbs"),
       entry: path.join(process.cwd(), "app", "src", "*.hbs"),
       // output path and filename(s). This should lie within the webpacks output-folder
       // if ommited, the input filepath stripped of its extension will be used
       output: path.join(process.cwd(), "build", "[name].html"),
+      // you can als add a [path] variable, which will emit the files with their relative path, like
+      // output: path.join(process.cwd(), "build", [path], "[name].html"),
+      
       // data passed to main hbs template: `main-template(data)`
       data: require("./app/data/project.json"),
       // or add it as filepath to rebuild data on change using webpack-dev-server
@@ -79,11 +82,12 @@ Per default, the generated filepath of the html-results is defined by the `outpu
 {
     /**
      * Modify the default output path of each entry-template
-     * @param {String} filepath   - the source of the template
+     * @param {String} filepath     - the source of the template
      * @param {String} outputTemplate - the filepath template defined in `output`
+     * @param {String} rootFolder   - the filepaths rootFolder
      * @return {String} final path, where the rendered html-file should be saved
      */
-    getTargetFilepath: function getTargetFilepath(filepath, outputTemplate) {
+    getTargetFilepath: function getTargetFilepath(filepath, outputTemplate, rootFolder) {
         const fileName = path.basename(filepath).replace(path.extname(filepath), "");
         return outputTemplate.replace("[name]", fileName);
     };
@@ -181,63 +185,68 @@ For custom merge behaviour you can add your own merge-helper, following the impl
 ## Contributors
 
 <a href="https://github.com/TheReincarnator">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="TheReincarnator" src="https://avatars0.githubusercontent.com/u/840370?s=460&v=4">
 </a>
 
 <a href="https://github.com/muuki88">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="muuki88" src="https://avatars2.githubusercontent.com/u/647727?s=460&v=4">
 </a>
 
 <a href="https://github.com/emilchristensen">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="emilchristensen" src="https://avatars3.githubusercontent.com/u/575486?s=460&v=4">
 </a>
 
 <a href="https://github.com/alisonailea">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="alisonailea" src="https://avatars2.githubusercontent.com/u/3362490?s=460&v=4">
 </a>
 
 <a href="https://github.com/vredondoGL">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="vredondoGL" src="https://avatars3.githubusercontent.com/u/35344609?s=460&v=4">
 </a>
 
 <a href="https://github.com/mkungla">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="mkungla" src="https://avatars2.githubusercontent.com/u/15878458?s=460&v=4">
 </a>
 
 <a href="https://github.com/bywo">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="bywo" src="https://avatars2.githubusercontent.com/u/1434481?s=460&v=4">
 </a>
 
 <a href="https://github.com/baldurh">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="baldurh" src="https://avatars3.githubusercontent.com/u/1823617?s=460&v=4">
 </a>
 
 <a href="https://github.com/DannyDelott">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="DannyDelott" src="https://avatars3.githubusercontent.com/u/4524175?s=460&v=4">
 </a>
 
 <a href="https://github.com/amandabouveng">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="amandabouveng" src="https://avatars2.githubusercontent.com/u/15197360?s=460&v=4">
 </a>
 
 <a href="https://github.com/patrikniebur">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="patrikniebur" src="https://avatars0.githubusercontent.com/u/6452693?s=460&v=4">
 </a>
 
 <a href="https://github.com/mitchheddles">
-    <img width="80" height="80" style="max-width:100%;" 
+    <img width="80" height="80" style="max-width:100%;"
         title="mitchheddles" src="https://avatars2.githubusercontent.com/u/20656128?s=460&v=4">
+</a>
+
+<a href="https://github.com/maratfakhreev">
+    <img width="80" height="80" style="max-width:100%;"
+        title="maratfakhreev" src="https://avatars0.githubusercontent.com/u/1300497?s=400&v=4">
 </a>
 
 

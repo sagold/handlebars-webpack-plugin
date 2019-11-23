@@ -8,6 +8,7 @@ const path = require("path");
 const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
 const sanitizePath = require("./utils/sanitizePath.js");
+const getRootFolder = require("./utils/getRootFolder");
 
 
 class HandlebarsPlugin {
@@ -309,7 +310,16 @@ class HandlebarsPlugin {
     compileEntryFile(sourcePath, outputPath) {
         outputPath = sanitizePath(outputPath);
 
-        let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output);
+        let rootFolderName = path.dirname(sourcePath);
+        if (this.options.output.includes("[path]")) {
+            rootFolderName = getRootFolder(sourcePath, this.options.entry, this.options.partials);
+        }
+        if (rootFolderName === false) {
+            compilation.errors.push(new Error(`${sourcePath}: is ignored`));
+            return;
+        }
+
+        let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output, rootFolderName);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
