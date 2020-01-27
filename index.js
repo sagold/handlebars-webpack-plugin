@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const chalk = require("chalk");
 const partialUtils = require("./utils/partials");
 const helperUtils = require("./utils/helpers");
-const Handlebars = require("handlebars");
+const _Handlebars = require("handlebars");
 const glob = require("glob");
 const path = require("path");
 const log = require("./utils/log");
@@ -14,6 +14,8 @@ const getRootFolder = require("./utils/getRootFolder");
 class HandlebarsPlugin {
 
     constructor(options = {}) {
+        this.HB = HandlebarsPlugin.Handlebars.create();
+
         this.options = Object.assign({
             entry: null,
             output: null,
@@ -42,7 +44,7 @@ class HandlebarsPlugin {
         this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, htmlWebpackPluginOptions);
 
         this.firstCompilation = true;
-        this.options.onBeforeSetup(Handlebars);
+        this.options.onBeforeSetup(this.HB);
         this.fileDependencies = [];
         this.assetsToEmit = {};
         this.updateData();
@@ -54,7 +56,7 @@ class HandlebarsPlugin {
     loadHelpers() {
         const helperMap = helperUtils.resolve(this.options.helpers);
         helperMap.forEach(helper => {
-            helperUtils.register(Handlebars, helper.id, helper.helperFunction);
+            helperUtils.register(this.HB, helper.id, helper.helperFunction);
             this.addDependency(helper.filepath);
         });
     }
@@ -64,9 +66,9 @@ class HandlebarsPlugin {
      */
     loadPartials() {
         // register partials
-        const partials = partialUtils.resolve(Handlebars, this.options.partials, this.options.getPartialId);
-        this.options.onBeforeAddPartials(Handlebars, partials);
-        partialUtils.addMap(Handlebars, partials);
+        const partials = partialUtils.resolve(this.HB, this.options.partials, this.options.getPartialId);
+        this.options.onBeforeAddPartials(this.HB, partials);
+        partialUtils.addMap(this.HB, partials);
         // watch all partials for changes
         this.addDependency.apply(this, Object.keys(partials).map(key => partials[key]));
     }
@@ -120,8 +122,7 @@ class HandlebarsPlugin {
                     compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", data => {
                         // @todo used a new partial helper to check for an existing partial
                         // @todo use generate id for consistent name replacements
-
-                        Handlebars.registerPartial(
+                        this.HB.registerPartial(
                             `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
                             data.html
                         );
@@ -286,7 +287,7 @@ class HandlebarsPlugin {
                 }
                 entryFilesArray.forEach(sourcePath => {
                     try {
-                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath);
+                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath, compilation);
                     } catch (error) {
                         compilation.errors.push(new Error(`${sourcePath}: ${error.message}\n${error.stack}`));
                     }
@@ -306,8 +307,9 @@ class HandlebarsPlugin {
      * Generates the html file for the given filepath
      * @param  {String} sourcePath  - filepath to handelebars template
      * @param  {String} outputPath  - webpack output path for build results
+     * @param  {Object} compilation  - webpack compilation instance
      */
-    compileEntryFile(sourcePath, outputPath) {
+    compileEntryFile(sourcePath, outputPath, compilation) {
         outputPath = sanitizePath(outputPath);
 
         let rootFolderName = path.dirname(sourcePath);
@@ -322,13 +324,13 @@ class HandlebarsPlugin {
         let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output, rootFolderName);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
-        templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
+        templateContent = this.options.onBeforeCompile(this.HB, templateContent) || templateContent;
         // create template
-        const template = Handlebars.compile(templateContent);
-        const data = this.options.onBeforeRender(Handlebars, this.data, sourcePath) || this.data;
+        const template = this.HB.compile(templateContent);
+        const data = this.options.onBeforeRender(this.HB, this.data, sourcePath) || this.data;
         // compile template
         let result = template(data);
-        result = this.options.onBeforeSave(Handlebars, result, targetFilepath) || result;
+        result = this.options.onBeforeSave(this.HB, result, targetFilepath) || result;
 
         if (targetFilepath.includes(outputPath)) {
             // change the destination path relative to webpacks output folder and emit it via webpack
@@ -344,12 +346,12 @@ class HandlebarsPlugin {
             fs.outputFileSync(targetFilepath, result, "utf-8");
         }
 
-        this.options.onDone(Handlebars, targetFilepath);
+        this.options.onDone(this.HB, targetFilepath);
         log(chalk.grey(`created output '${targetFilepath.replace(`${process.cwd()}/`, "")}'`));
     }
 }
 
 // export Handlebars for easy access in helpers
-HandlebarsPlugin.Handlebars = Handlebars;
+HandlebarsPlugin.Handlebars = _Handlebars;
 
 module.exports = HandlebarsPlugin;

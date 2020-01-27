@@ -40,7 +40,7 @@ test("should load all helpers", t => {
             helperFromGlob: path.join(srcFolder, "helpers", "**", "*.helper.js")
         }
     });
-    const handlebars = require("handlebars");
+    const handlebars = plugin.HB;
     const register = sinon.spy(handlebars, "registerHelper");
     handlebars.helpers = {};
 
@@ -60,7 +60,7 @@ test("should load all partials", t => {
     const plugin = new Plugin({
         partials: [path.join(srcFolder, "partials", "**", "*.hbs")]
     });
-    const handlebars = require("handlebars");
+    const handlebars = plugin.HB;
     const register = sinon.spy(handlebars, "registerPartial");
 
     plugin.loadPartials();
