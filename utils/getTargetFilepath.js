@@ -5,7 +5,8 @@ const sanitizePath = require("./sanitizePath");
 /**
  * Returns the target filePath of a handlebars template
  * @param  {String} filePath            - input filePath
- * @param  {String} [outputTemplate]    - template for output filename. If ommited, the same filename stripped of its extension will be used
+ * @param  {String} [outputTemplate]    - template for output filename.
+ *     If ommited, the same filename stripped of its extension will be used
  * @param  {String} [rootPath]            - input rootPath
  * @return {String} target filePath
  */
