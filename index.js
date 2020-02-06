@@ -236,7 +236,7 @@ class HandlebarsPlugin {
 
     /**
      * Notifies webpack-dev-server of generated files
-     * @param  {Compilation} compilation
+     * @param  {Object} compilation
      */
     emitGeneratedFiles(compilation) {
         Object.keys(this.assetsToEmit).forEach(filename => {
@@ -265,7 +265,7 @@ class HandlebarsPlugin {
     /**
      * @async
      * Generates all given handlebars templates
-     * @param  {String} compilation  - webpack compilation
+     * @param  {Object} compilation  - webpack compilation
      * @param  {Function} done
      */
     compileAllEntryFiles(compilation, done) {
@@ -286,7 +286,7 @@ class HandlebarsPlugin {
                 }
                 entryFilesArray.forEach(sourcePath => {
                     try {
-                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath);
+                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath, compilation);
                     } catch (error) {
                         compilation.errors.push(new Error(`${sourcePath}: ${error.message}\n${error.stack}`));
                     }
@@ -306,8 +306,9 @@ class HandlebarsPlugin {
      * Generates the html file for the given filepath
      * @param  {String} sourcePath  - filepath to handelebars template
      * @param  {String} outputPath  - webpack output path for build results
+     * @param  {Object} compilation  - webpack compilation
      */
-    compileEntryFile(sourcePath, outputPath) {
+    compileEntryFile(sourcePath, outputPath, compilation) {
         outputPath = sanitizePath(outputPath);
 
         let rootFolderName = path.dirname(sourcePath);
