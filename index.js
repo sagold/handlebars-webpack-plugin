@@ -94,12 +94,14 @@ class HandlebarsPlugin {
         // REGISTER FILE DEPENDENCIES TO WEBPACK
         const emitDependencies = (compilation, done) => {
             try {
+                // resolve file paths for webpack-dev-server
+                const resolvedDependencies = this.fileDependencies.map(file => path.resolve(file));
                 // register dependencies at webpack
                 if (compilation.fileDependencies.add) {
                     // webpack@4
-                    this.fileDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
+                    resolvedDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
                 } else {
-                    compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
+                    compilation.fileDependencies = compilation.fileDependencies.concat(resolvedDependencies);
                 }
                 // emit generated html pages (webpack-dev-server)
                 this.emitGeneratedFiles(compilation);
@@ -130,7 +132,7 @@ class HandlebarsPlugin {
                             // @improve hacky filepath retrieval
                             // add source file to file dependencies, to watch for changes in webpack-dev-server
                             const sourceFile = data.plugin.options.template.split("!").pop();
-                            this.fileDependencies.push(sourceFile);
+                            this.addDependency(sourceFile);
                         } catch (e) {
                             log(chalk.red(e));
                         }
@@ -175,6 +177,7 @@ class HandlebarsPlugin {
         }
 
         args.forEach(filename => {
+            filename = sanitizePath(filename);
             if (filename && !this.fileDependencies.includes(filename)) {
                 this.fileDependencies.push(filename);
             }
@@ -321,6 +324,7 @@ class HandlebarsPlugin {
         }
 
         let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output, rootFolderName);
+        targetFilepath = sanitizePath(targetFilepath);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;
