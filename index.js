@@ -55,7 +55,9 @@ class HandlebarsPlugin {
         const helperMap = helperUtils.resolve(this.options.helpers);
         helperMap.forEach(helper => {
             helperUtils.register(Handlebars, helper.id, helper.helperFunction);
-            this.addDependency(helper.filepath);
+            if (helper.filepath) {
+                this.addDependency(helper.filepath);
+            }
         });
     }
 
@@ -175,7 +177,7 @@ class HandlebarsPlugin {
         if (!args) {
             return;
         }
-
+        console.log("add dependency", args);
         args.forEach(filename => {
             filename = sanitizePath(filename);
             if (filename && !this.fileDependencies.includes(filename)) {
