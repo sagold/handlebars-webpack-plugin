@@ -55,7 +55,9 @@ class HandlebarsPlugin {
         const helperMap = helperUtils.resolve(this.options.helpers);
         helperMap.forEach(helper => {
             helperUtils.register(Handlebars, helper.id, helper.helperFunction);
-            this.addDependency(helper.filepath);
+            if (helper.filepath) {
+                this.addDependency(helper.filepath);
+            }
         });
     }
 
@@ -94,12 +96,14 @@ class HandlebarsPlugin {
         // REGISTER FILE DEPENDENCIES TO WEBPACK
         const emitDependencies = (compilation, done) => {
             try {
+                // resolve file paths for webpack-dev-server
+                const resolvedDependencies = this.fileDependencies.map(file => path.resolve(file));
                 // register dependencies at webpack
                 if (compilation.fileDependencies.add) {
                     // webpack@4
-                    this.fileDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
+                    resolvedDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
                 } else {
-                    compilation.fileDependencies = compilation.fileDependencies.concat(this.fileDependencies);
+                    compilation.fileDependencies = compilation.fileDependencies.concat(resolvedDependencies);
                 }
                 // emit generated html pages (webpack-dev-server)
                 this.emitGeneratedFiles(compilation);
@@ -130,7 +134,7 @@ class HandlebarsPlugin {
                             // @improve hacky filepath retrieval
                             // add source file to file dependencies, to watch for changes in webpack-dev-server
                             const sourceFile = data.plugin.options.template.split("!").pop();
-                            this.fileDependencies.push(sourceFile);
+                            this.addDependency(sourceFile);
                         } catch (e) {
                             log(chalk.red(e));
                         }
@@ -173,8 +177,9 @@ class HandlebarsPlugin {
         if (!args) {
             return;
         }
-
+        console.log("add dependency", args);
         args.forEach(filename => {
+            filename = sanitizePath(filename);
             if (filename && !this.fileDependencies.includes(filename)) {
                 this.fileDependencies.push(filename);
             }
@@ -236,7 +241,7 @@ class HandlebarsPlugin {
 
     /**
      * Notifies webpack-dev-server of generated files
-     * @param  {Compilation} compilation
+     * @param  {Object} compilation
      */
     emitGeneratedFiles(compilation) {
         Object.keys(this.assetsToEmit).forEach(filename => {
@@ -265,7 +270,7 @@ class HandlebarsPlugin {
     /**
      * @async
      * Generates all given handlebars templates
-     * @param  {String} compilation  - webpack compilation
+     * @param  {Object} compilation  - webpack compilation
      * @param  {Function} done
      */
     compileAllEntryFiles(compilation, done) {
@@ -286,7 +291,7 @@ class HandlebarsPlugin {
                 }
                 entryFilesArray.forEach(sourcePath => {
                     try {
-                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath);
+                        this.compileEntryFile(sourcePath, compilation.compiler.outputPath, compilation);
                     } catch (error) {
                         compilation.errors.push(new Error(`${sourcePath}: ${error.message}\n${error.stack}`));
                     }
@@ -306,8 +311,9 @@ class HandlebarsPlugin {
      * Generates the html file for the given filepath
      * @param  {String} sourcePath  - filepath to handelebars template
      * @param  {String} outputPath  - webpack output path for build results
+     * @param  {Object} compilation  - webpack compilation
      */
-    compileEntryFile(sourcePath, outputPath) {
+    compileEntryFile(sourcePath, outputPath, compilation) {
         outputPath = sanitizePath(outputPath);
 
         let rootFolderName = path.dirname(sourcePath);
@@ -320,6 +326,7 @@ class HandlebarsPlugin {
         }
 
         let targetFilepath = this.options.getTargetFilepath(sourcePath, this.options.output, rootFolderName);
+        targetFilepath = sanitizePath(targetFilepath);
         // fetch template content
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(Handlebars, templateContent) || templateContent;

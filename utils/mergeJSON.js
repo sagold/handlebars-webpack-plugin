@@ -13,7 +13,4 @@ module.exports = function mergeJSON(absoluteGlobPattern) {
         resultingData[id] = require(filepath);
     });
     return resultingData;
-}
-
-
-
+};
