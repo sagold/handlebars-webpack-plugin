@@ -249,4 +249,9 @@ For custom merge behaviour you can add your own merge-helper, following the impl
         title="maratfakhreev" src="https://avatars0.githubusercontent.com/u/1300497?s=400&v=4">
 </a>
 
+<a href="https://github.com/DKvistgaard">
+    <img width="80" height="80" style="max-width:100%;"
+        title="DKvistgaard" src="https://avatars1.githubusercontent.com/u/1705203?s=460&v=4">
+</a>
+
 
