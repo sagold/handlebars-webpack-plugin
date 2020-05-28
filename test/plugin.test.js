@@ -105,8 +105,8 @@ test("should run compileEntryFile for each entry file", async t => {
     await new Promise(resolve => plugin.compileAllEntryFiles(compilation, resolve));
 
     t.is(compileEntryFile.callCount, 2, "Expected two entry files to be found");
-    t.is(compileEntryFile.getCall(0).args[0], path.join(srcFolder, "entries", "index.hbs"));
-    t.is(compileEntryFile.getCall(1).args[0], path.join(srcFolder, "entries", "nested", "nested.hbs"));
+    t.is(path.normalize(compileEntryFile.getCall(0).args[0]), path.join(srcFolder, "entries", "index.hbs"));
+    t.is(path.normalize(compileEntryFile.getCall(1).args[0]), path.join(srcFolder, "entries", "nested", "nested.hbs"));
 
     compileEntryFile.restore();
 });
