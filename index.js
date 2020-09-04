@@ -178,7 +178,6 @@ class HandlebarsPlugin {
         if (!args) {
             return;
         }
-        console.log("add dependency", args);
         args.forEach(filename => {
             filename = sanitizePath(filename);
             if (filename && !this.fileDependencies.includes(filename)) {
@@ -319,7 +318,7 @@ class HandlebarsPlugin {
 
         let rootFolderName = path.dirname(sourcePath);
         if (this.options.output.includes("[path]")) {
-            rootFolderName = getRootFolder(sourcePath, this.options.entry, this.options.partials);
+            rootFolderName = getRootFolder(sourcePath, this.options.entry);
         }
         if (rootFolderName === false) {
             compilation.errors.push(new Error(`${sourcePath}: is ignored`));
