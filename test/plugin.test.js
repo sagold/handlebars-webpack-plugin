@@ -40,7 +40,7 @@ test("should load all helpers", t => {
             helperFromGlob: path.join(srcFolder, "helpers", "**", "*.helper.js")
         }
     });
-    const handlebars = require("handlebars");
+    const handlebars = plugin.HB;
     const register = sinon.spy(handlebars, "registerHelper");
     handlebars.helpers = {};
 
@@ -56,13 +56,13 @@ test("should load all helpers", t => {
 });
 
 
-test.only("should support inline helpers", t => {
+test("should support inline helpers", t => {
     const plugin = new Plugin({ // eslint-disable-line no-unused-vars
         helpers: {
             random: function random() { return Math.random(); }
         }
     });
-    const handlebars = require("handlebars");
+    const handlebars = plugin.HB;
     const register = sinon.spy(handlebars, "registerHelper");
     handlebars.helpers = {};
 
@@ -81,7 +81,7 @@ test("should load all partials", t => {
     const plugin = new Plugin({
         partials: [path.join(srcFolder, "partials", "**", "*.hbs")]
     });
-    const handlebars = require("handlebars");
+    const handlebars = plugin.HB;
     const register = sinon.spy(handlebars, "registerPartial");
 
     plugin.loadPartials();
