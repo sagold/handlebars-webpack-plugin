@@ -115,7 +115,7 @@ To change the partial's id you can pass a custom partial-generator to the plugin
      * @return {String} hbs-partialId, per default folder/partialName is used
      */
     getPartialId: function (filePath) {
-        return path.match(/\/([^/]+\/[^/]+)\.[^.]+$/).pop();
+        return filePath.match(/\/([^/]+\/[^/]+)\.[^.]+$/).pop();
     }
 }
 ```
