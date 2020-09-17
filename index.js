@@ -123,25 +123,7 @@ class HandlebarsPlugin {
                 const { prefix } = this.options.htmlWebpackPlugin;
 
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
-                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", data => {
-                        // @todo used a new partial helper to check for an existing partial
-                        // @todo use generate id for consistent name replacements
-                        this.HB.registerPartial(
-                            `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
-                            data.html
-                        );
-
-                        try {
-                            // @improve hacky filepath retrieval
-                            // add source file to file dependencies, to watch for changes in webpack-dev-server
-                            const sourceFile = data.plugin.options.template.split("!").pop();
-                            this.addDependency(sourceFile);
-                        } catch (e) {
-                            log(chalk.red(e));
-                        }
-
-                        return data;
-                    });
+                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", this.processHtml.bind(this));
                 });
 
                 compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (compilation, done) => {
@@ -158,6 +140,27 @@ class HandlebarsPlugin {
             compiler.plugin("make", compile);
             compiler.plugin("emit", emitDependencies);
         }
+    }
+
+    processHtml(data) {
+        const { prefix } = this.options.htmlWebpackPlugin;
+        // @todo used a new partial helper to check for an existing partial
+        // @todo use generate id for consistent name replacements
+        this.HB.registerPartial(
+            `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
+            data.html
+        );
+
+        try {
+            // @improve hacky filepath retrieval
+            // add source file to file dependencies, to watch for changes in webpack-dev-server
+            const sourceFile = data.plugin.options.template.split("!").pop();
+            this.addDependency(sourceFile);
+        } catch (e) {
+            log(chalk.red(e));
+        }
+
+        return data;
     }
 
     /**
