@@ -9,7 +9,7 @@ const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
 const sanitizePath = require("./utils/sanitizePath.js");
 const getRootFolder = require("./utils/getRootFolder");
-
+const HtmlWebpackPlugin = require('safe-require')('html-webpack-plugin');
 
 class HandlebarsPlugin {
 
@@ -120,10 +120,14 @@ class HandlebarsPlugin {
         if (compiler.hooks) {
             // @feature html-webpack-plugin
             if (this.options.htmlWebpackPlugin.enabled) {
-                const { prefix } = this.options.htmlWebpackPlugin;
-
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
-                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", this.processHtml.bind(this));
+                    // html-webpack-plugin < 4
+                    if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {
+                        compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", this.processHtml.bind(this));
+                    } else if (HtmlWebpackPlugin.getHooks) {
+                        HtmlWebpackPlugin.getHooks(compilation).beforeEmit
+                            .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
+                    }
                 });
 
                 compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (compilation, done) => {
