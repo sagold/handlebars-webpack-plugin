@@ -124,7 +124,9 @@ class HandlebarsPlugin {
                     // html-webpack-plugin < 4
                     if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {
                         compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", this.processHtml.bind(this));
-                    } else if (HtmlWebpackPlugin.getHooks) {
+                    }
+                    // html-webpack-plugin >= 4
+                    else if (HtmlWebpackPlugin.getHooks) {
                         HtmlWebpackPlugin.getHooks(compilation).beforeEmit
                             .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
                     }
