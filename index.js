@@ -55,11 +55,12 @@ class HandlebarsPlugin {
         this.updateData();
         this.prevTimestamps = {};
         this.startTime = Date.now();
-        this.loadHelpers();
     }
 
     loadHelpers() {
         const helperMap = helperUtils.resolve(this.options.helpers);
+        // remove helper, before adding them again
+        helperUtils.unregister(this.HB, ...helperMap.map(helper => helper.id));
         helperMap.forEach(helper => {
             helperUtils.register(this.HB, helper.id, helper.helperFunction);
             if (helper.filepath) {
@@ -93,6 +94,7 @@ class HandlebarsPlugin {
                     return done();
                 }
                 this.loadPartials(); // Refresh partials
+                this.loadHelpers(); // Refresh helpers
                 this.compileAllEntryFiles(compilation, done); // build all html pages
             } catch (error) {
                 compilation.errors.push(error);

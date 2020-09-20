@@ -20,6 +20,9 @@ function register(Handlebars, id, fun) { // eslint-disable-line no-shadow
     Handlebars.registerHelper(id, fun);
 }
 
+function unregister(Handlebars, ...helpers) {
+    helpers.forEach(id => (Handlebars.helpers[id] = undefined));
+}
 
 /**
  * Resolves the helpers config to a map with id, filepath and the corresponding helper-function
@@ -37,6 +40,7 @@ function resolve(query) {
             if (typeof query[helperId] === "string") {
                 const foundHelpers = glob.sync(query[helperId]);
                 foundHelpers.forEach(pathToHelper => {
+                    delete require.cache[require.resolve(pathToHelper)];
                     resolvedHelpers.push({
                         id: getId(pathToHelper),
                         filepath: path.normalize(pathToHelper),
@@ -60,5 +64,6 @@ function resolve(query) {
 module.exports = {
     getId,
     register,
+    unregister,
     resolve
 };
