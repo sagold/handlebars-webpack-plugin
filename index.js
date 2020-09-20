@@ -9,7 +9,7 @@ const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
 const sanitizePath = require("./utils/sanitizePath.js");
 const getRootFolder = require("./utils/getRootFolder");
-const _HtmlWebpackPlugin = require('safe-require')('html-webpack-plugin');
+const _HtmlWebpackPlugin = require("safe-require")("html-webpack-plugin");
 
 
 class HandlebarsPlugin {
