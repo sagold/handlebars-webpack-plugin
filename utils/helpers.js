@@ -1,6 +1,7 @@
 const glob = require("glob");
 const chalk = require("chalk");
 const log = require("./log");
+const path = require("path");
 
 
 function getId(filepath) {
@@ -38,7 +39,7 @@ function resolve(query) {
                 foundHelpers.forEach(pathToHelper => {
                     resolvedHelpers.push({
                         id: getId(pathToHelper),
-                        filepath: pathToHelper,
+                        filepath: path.normalize(pathToHelper),
                         helperFunction: require(pathToHelper)
                     });
                 });

@@ -9,6 +9,7 @@ const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
 const sanitizePath = require("./utils/sanitizePath.js");
 const getRootFolder = require("./utils/getRootFolder");
+const _HtmlWebpackPlugin = require("safe-require")("html-webpack-plugin");
 
 
 class HandlebarsPlugin {
@@ -41,7 +42,11 @@ class HandlebarsPlugin {
             htmlWebpackPluginOptions = { enabled: true };
         }
 
-        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, htmlWebpackPluginOptions);
+        this.options.htmlWebpackPlugin = Object.assign({
+            enabled: false,
+            prefix: "html",
+            HtmlWebpackPlugin: _HtmlWebpackPlugin
+        }, htmlWebpackPluginOptions);
 
         this.firstCompilation = true;
         this.options.onBeforeSetup(this.HB);
@@ -118,30 +123,19 @@ class HandlebarsPlugin {
 
         // @wp >= 4
         if (compiler.hooks) {
+            const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
             // @feature html-webpack-plugin
-            if (this.options.htmlWebpackPlugin.enabled) {
-                const { prefix } = this.options.htmlWebpackPlugin;
-
+            if (enabled && HtmlWebpackPlugin) {
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
-                    compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", data => {
-                        // @todo used a new partial helper to check for an existing partial
-                        // @todo use generate id for consistent name replacements
-                        this.HB.registerPartial(
-                            `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
-                            data.html
-                        );
-
-                        try {
-                            // @improve hacky filepath retrieval
-                            // add source file to file dependencies, to watch for changes in webpack-dev-server
-                            const sourceFile = data.plugin.options.template.split("!").pop();
-                            this.addDependency(sourceFile);
-                        } catch (e) {
-                            log(chalk.red(e));
-                        }
-
-                        return data;
-                    });
+                    // html-webpack-plugin < 4
+                    if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {
+                        compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", this.processHtml.bind(this));
+                    }
+                    // html-webpack-plugin >= 4
+                    else if (HtmlWebpackPlugin.getHooks) {
+                        HtmlWebpackPlugin.getHooks(compilation).beforeEmit
+                            .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
+                    }
                 });
 
                 compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (compilation, done) => {
@@ -158,6 +152,27 @@ class HandlebarsPlugin {
             compiler.plugin("make", compile);
             compiler.plugin("emit", emitDependencies);
         }
+    }
+
+    processHtml(data) {
+        const { prefix } = this.options.htmlWebpackPlugin;
+        // @todo used a new partial helper to check for an existing partial
+        // @todo use generate id for consistent name replacements
+        this.HB.registerPartial(
+            `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
+            data.html
+        );
+
+        try {
+            // @improve hacky filepath retrieval
+            // add source file to file dependencies, to watch for changes in webpack-dev-server
+            const sourceFile = data.plugin.options.template.split("!").pop();
+            this.addDependency(sourceFile);
+        } catch (e) {
+            log(chalk.red(e));
+        }
+
+        return data;
     }
 
     /**

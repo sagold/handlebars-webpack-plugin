@@ -1,3 +1,12 @@
+# v2.1.0 - 20/09/20
+
+- Add support for html-webpack-plugin@4 #66
+
+# v2.0.0 - 20/09/04
+
+- [Breaking] Added support for Handlebars-Instances #62
+- Fix partial path resolution in sub-folders #64
+
 # v1.6.0 - 19/06/16
 
 - Fix windows filepaths
