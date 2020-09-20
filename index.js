@@ -9,7 +9,8 @@ const log = require("./utils/log");
 const getTargetFilepath = require("./utils/getTargetFilepath");
 const sanitizePath = require("./utils/sanitizePath.js");
 const getRootFolder = require("./utils/getRootFolder");
-const HtmlWebpackPlugin = require('safe-require')('html-webpack-plugin');
+const _HtmlWebpackPlugin = require('safe-require')('html-webpack-plugin');
+
 
 class HandlebarsPlugin {
 
@@ -41,7 +42,11 @@ class HandlebarsPlugin {
             htmlWebpackPluginOptions = { enabled: true };
         }
 
-        this.options.htmlWebpackPlugin = Object.assign({ enabled: false, prefix: "html" }, htmlWebpackPluginOptions);
+        this.options.htmlWebpackPlugin = Object.assign({
+            enabled: false,
+            prefix: "html",
+            HtmlWebpackPlugin: _HtmlWebpackPlugin
+        }, htmlWebpackPluginOptions);
 
         this.firstCompilation = true;
         this.options.onBeforeSetup(this.HB);
@@ -118,8 +123,9 @@ class HandlebarsPlugin {
 
         // @wp >= 4
         if (compiler.hooks) {
+            const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
             // @feature html-webpack-plugin
-            if (this.options.htmlWebpackPlugin.enabled) {
+            if (enabled && HtmlWebpackPlugin) {
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
                     // html-webpack-plugin < 4
                     if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {

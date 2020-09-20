@@ -146,8 +146,9 @@ plugins: [
   new HandlebarsWebpackPlugin({
 
     htmlWebpackPlugin: {
-    enabled: true, // register all partials from html-webpack-plugin, defaults to `false`
-    prefix: "html" // where to look for htmlWebpackPlugin output. default is "html"
+      enabled: true, // register all partials from html-webpack-plugin, defaults to `false`
+      prefix: "html", // where to look for htmlWebpackPlugin output. default is "html"
+      HtmlWebpackPlugin // optionally: pass in HtmlWebpackPlugin if it cannot be resolved
     },
 
     entry: path.join(process.cwd(), "src", "hbs", "*.hbs"),
