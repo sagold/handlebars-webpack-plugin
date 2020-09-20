@@ -1,3 +1,7 @@
+# v2.1.1 - 20/09/20
+
+- Fix watch changes in helpers
+
 # v2.1.0 - 20/09/20
 
 - Add support for html-webpack-plugin@4 #66
