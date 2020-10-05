@@ -24,7 +24,7 @@ const webpackConfig = {
       // output path and filename(s). This should lie within the webpacks output-folder
       // if ommited, the input filepath stripped of its extension will be used
       output: path.join(process.cwd(), "build", "[name].html"),
-      // you can als add a [path] variable, which will emit the files with their relative path, like
+      // you can also add a [path] variable, which will emit the files with their relative path, like
       // output: path.join(process.cwd(), "build", [path], "[name].html"),
       
       // data passed to main hbs template: `main-template(data)`
