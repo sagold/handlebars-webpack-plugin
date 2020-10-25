@@ -90,7 +90,7 @@ class HandlebarsPlugin {
         // COMPILE TEMPLATES
         const compile = (compilation, done) => {
             try {
-                if (this.dependenciesUpdated(compilation) === false) {
+                if (this.dependenciesUpdated(compiler) === false) {
                     return done();
                 }
                 this.loadPartials(); // Refresh partials
@@ -207,20 +207,23 @@ class HandlebarsPlugin {
      * @param  {Object} compilation     - webpack compilation
      * @return {Boolean} true, if a handlebars file or helper has been updated
      */
-    dependenciesUpdated(compilation) {
-        // NOTE: fileTimestamps will be an `object` or `Map` depending on the webpack version
-        const fileTimestamps = compilation.fileTimestamps;
-        const fileNames = fileTimestamps.has ? Array.from(fileTimestamps.keys()) : Object.keys(fileTimestamps);
+    dependenciesUpdated(compiler) {
+        const modifiedFiles = compiler.modifiedFiles; // Set containing paths of modified files
 
-        const changedFiles = fileNames.filter(watchfile => {
-            const prevTimestamp = this.prevTimestamps[watchfile];
-            const nextTimestamp = fileTimestamps.has ? fileTimestamps.get(watchfile) : fileTimestamps[watchfile];
-            this.prevTimestamps[watchfile] = nextTimestamp;
-            return (prevTimestamp || this.startTime) < (nextTimestamp || Infinity);
-        });
+        if (modifiedFiles == null) { // First run
+            return true;
+        }
 
-        // diff may be zero on initial build, thus also rebuild if there are no changes
-        return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
+        const fileDependencies = this.fileDependencies;
+
+        for (let i = 0; i < fileDependencies.length; i++) {
+             // path.resolve because paths in fileDependencies have '/' separators while paths in modifiedFiles have '\' separators (on windows)
+            if (modifiedFiles.has(path.resolve(fileDependencies[i]))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
