@@ -131,10 +131,13 @@ class HandlebarsPlugin {
                 compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
                     // html-webpack-plugin < 4
                     if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {
-                        compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap("HandlebarsRenderPlugin", this.processHtml.bind(this));
-                    }
+                        compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap(
+                            "HandlebarsRenderPlugin",
+                            this.processHtml.bind(this)
+                        );
+
                     // html-webpack-plugin >= 4
-                    else if (HtmlWebpackPlugin.getHooks) {
+                    } else if (HtmlWebpackPlugin.getHooks) {
                         HtmlWebpackPlugin.getHooks(compilation).beforeEmit
                             .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
                     }
@@ -204,7 +207,7 @@ class HandlebarsPlugin {
     }
 
     /**
-     * @param  {Object} compilation     - webpack compilation
+     * @param  {Object} compiler
      * @return {Boolean} true, if a handlebars file or helper has been updated
      */
     dependenciesUpdated(compiler) {
@@ -217,7 +220,8 @@ class HandlebarsPlugin {
         const fileDependencies = this.fileDependencies;
 
         for (let i = 0; i < fileDependencies.length; i++) {
-             // path.resolve because paths in fileDependencies have '/' separators while paths in modifiedFiles have '\' separators (on windows)
+            // path.resolve because paths in fileDependencies have '/' separators while paths
+            // in modifiedFiles have '\' separators (on windows)
             if (modifiedFiles.has(path.resolve(fileDependencies[i]))) {
                 return true;
             }
