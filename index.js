@@ -89,10 +89,18 @@ class HandlebarsPlugin {
 
         // COMPILE TEMPLATES
         const compile = (compilation, done) => {
+
             try {
-                if (this.dependenciesUpdated(compiler) === false) {
+                // wp >= v5
+                if (compilation.fileTimestamps == null) {
+                    if (this.dependenciesUpdated(compiler) === false) {
+                        return done();
+                    }
+                // @legacy wp < v5
+                } else if (this.dependenciesUpdatedLegacy(compilation) === false) {
                     return done();
                 }
+
                 this.loadPartials(); // Refresh partials
                 this.loadHelpers(); // Refresh helpers
                 this.compileAllEntryFiles(compilation, done); // build all html pages
@@ -207,6 +215,28 @@ class HandlebarsPlugin {
     }
 
     /**
+     * Check if dependencies have been modified (webpack < 5)
+     * @param  {Object} compilation     - webpack compilation
+     * @return {Boolean} true, if a handlebars file or helper has been updated
+     */
+    dependenciesUpdatedLegacy(compilation) {
+        // NOTE: fileTimestamps will be an `object` or `Map` depending on the webpack version
+        const fileTimestamps = compilation.fileTimestamps;
+        const fileNames = fileTimestamps.has ? Array.from(fileTimestamps.keys()) : Object.keys(fileTimestamps);
+
+        const changedFiles = fileNames.filter(watchfile => {
+            const prevTimestamp = this.prevTimestamps[watchfile];
+            const nextTimestamp = fileTimestamps.has ? fileTimestamps.get(watchfile) : fileTimestamps[watchfile];
+            this.prevTimestamps[watchfile] = nextTimestamp;
+            return (prevTimestamp || this.startTime) < (nextTimestamp || Infinity);
+        });
+
+        // diff may be zero on initial build, thus also rebuild if there are no changes
+        return changedFiles.length === 0 || this.containsOwnDependency(changedFiles);
+    }
+
+    /**
+     * Check if dependencies have been modified
      * @param  {Object} compiler
      * @return {Boolean} true, if a handlebars file or helper has been updated
      */
