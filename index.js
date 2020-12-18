@@ -157,8 +157,30 @@ class HandlebarsPlugin {
 
             } else {
                 // use standard compiler hooks
-                compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
-                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+                compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", compilation => {
+                    if (typeof compilation.emitAsset !== "function") {
+                        // @wp ^4.0.0
+                        compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
+                        compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+                        return;
+                    }
+
+                    // @wp >= 5
+                    compilation.hooks.processAssets.tapAsync(
+                        {
+                            name: "HandlebarsRenderPlugin",
+                            stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS
+                        },
+                        compile
+                    );
+                    compilation.hooks.processAssets.tapAsync(
+                        {
+                            name: "HandlebarsRenderPlugin",
+                            stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+                        },
+                        emitDependencies
+                    );
+                });
             }
         } else {
             // @legacy wp < v4
