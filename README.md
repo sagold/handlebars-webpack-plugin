@@ -1,6 +1,6 @@
 <h1 align="center"><img src="./docs/hbs-wp-plugin.png" width="276" alt="handlebars webpack plugin"></h1>
 
-> Server-side template rendering using [Handlebars](http://handlebarsjs.com/).
+> Server-side template rendering using [Handlebars](http://handlebarsjs.com/) for webpack versions >= 4
 
 
 `npm install handlebars-webpack-plugin --save-dev`
@@ -127,6 +127,7 @@ To change the partial's id you can pass a custom partial-generator to the plugin
 > Use the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) to generate partials, that are
 > dynamically registered to the handlebars-webpack-plugin
 
+- only supports html-webpack-plugin version >= 4
 - the `HtmlWebpackPlugin` should be placed before the HandlebarsWebpackPlugin
 - multiple HtmlWebpackPlugins may be used
 - per default, the partials get registered to `html/partials/<outputfilename>`, i.e. a filename `/dist/partials/head.hbs` will be registered as `html/partials/head` to handlebars

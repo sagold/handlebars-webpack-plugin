@@ -1,3 +1,9 @@
+# v3.0.0 - 21/01/10
+
+- Fixed deprecation warning with webpack@v5
+- Breaking Change: Removed support for webpack@v3. Install using tag `wp3` for webpack 3 support
+- Breaking Change: Dropped support for html-webpack-plugin < v4. Install using tag `wp3` for html-webpack-plugin 3 support
+
 # v2.1.1 - 20/09/20
 
 - Fix watch changes in helpers
