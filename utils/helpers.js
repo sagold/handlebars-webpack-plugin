@@ -3,9 +3,13 @@ const chalk = require("chalk");
 const log = require("./log");
 const path = require("path");
 
-function isWebpackV4(compilation) {
-    return typeof compilation.hooks.optimizeDependenciesBasic === "object" &&
-        compilation.hooks.optimizeDependenciesBasic !== null;
+function getWebpackMajorVersion(compiler) {
+    if (compiler.webpack) {
+        // introduced with webpack 5
+        return parseInt(compiler.webpack.version);
+    }
+    // we only support version 4+, thus we can safely return minimum version
+    return 4;
 }
 
 function getId(filepath) {
@@ -66,7 +70,7 @@ function resolve(query) {
 
 
 module.exports = {
-    isWebpackV4,
+    getWebpackMajorVersion,
     getId,
     register,
     unregister,

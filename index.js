@@ -85,10 +85,7 @@ class HandlebarsPlugin {
      * @param  {Compiler} compiler
      */
     apply(compiler) {
-        let webpackMajorVersion = 4;
-        if (compiler.webpack) {
-            webpackMajorVersion = parseInt(compiler.webpack.version);
-        }
+        let webpackMajorVersion = helperUtils.getWebpackMajorVersion(compiler);
 
         if (webpackMajorVersion < 5) {
             this.applyWebpackV4(compiler);
@@ -183,7 +180,7 @@ class HandlebarsPlugin {
             try {
                 // resolve file paths for webpack-dev-server
                 const resolvedDependencies = this.fileDependencies.map(file => path.resolve(file));
-                // register dependencies at webpack@4
+                // register dependencies
                 resolvedDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
                 // emit generated html pages (webpack-dev-server)
                 this.emitGeneratedFiles(compilation);
