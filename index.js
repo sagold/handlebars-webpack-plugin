@@ -11,7 +11,6 @@ const sanitizePath = require("./utils/sanitizePath.js");
 const getRootFolder = require("./utils/getRootFolder");
 const _HtmlWebpackPlugin = require("safe-require")("html-webpack-plugin");
 
-
 class HandlebarsPlugin {
 
     constructor(options = {}) {
@@ -86,6 +85,15 @@ class HandlebarsPlugin {
      * @param  {Compiler} compiler
      */
     apply(compiler) {
+        let webpackMajorVersion = 4;
+        if (compiler.webpack) {
+            webpackMajorVersion = parseInt(compiler.webpack.version);
+        }
+
+        if (webpackMajorVersion < 5) {
+            this.applyWebpackV4(compiler);
+            return;
+        }
 
         // COMPILE TEMPLATES
         const compile = (compilation, done) => {
@@ -130,69 +138,99 @@ class HandlebarsPlugin {
             return undefined; // done();?
         };
 
-        // @wp >= 4
-        if (compiler.hooks) {
-            const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
-            // @feature html-webpack-plugin
-            if (enabled && HtmlWebpackPlugin) {
-                compiler.hooks.thisCompilation.tap("HtmlWebpackPluginHooks", compilation => {
-                    // html-webpack-plugin < 4
-                    if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {
-                        compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap(
-                            "HandlebarsRenderPlugin",
-                            this.processHtml.bind(this)
-                        );
+        const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
+        // @feature html-webpack-plugin
+        if (enabled && HtmlWebpackPlugin) {
+            compiler.hooks.thisCompilation.tap("HtmlWebpackPluginHooks", compilation => {
+                // html-webpack-plugin >= 4
+                HtmlWebpackPlugin.getHooks(compilation).beforeEmit
+                    .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
 
-                    // html-webpack-plugin >= 4
-                    } else if (HtmlWebpackPlugin.getHooks) {
-                        HtmlWebpackPlugin.getHooks(compilation).beforeEmit
-                            .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
+                // @wp >= 5
+                compilation.hooks.processAssets.tapAsync(
+                    {
+                        name: "HandlebarsRenderPlugin",
+                        stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE
+                    },
+                    (assets, done) => {
+                        compile(compilation, () => emitDependencies(compilation, done));
                     }
+                );
+            });
+            return;
 
-                    if (helperUtils.isWebpackV4(compilation)) {
-                        // @wp ^4.0.0
-                        compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (_, done) => {
-                            compile(compilation, () => emitDependencies(compilation, done));
-                        });
-                    } else {
-                        // @wp >= 5
-                        compilation.hooks.processAssets.tapAsync(
-                            {
-                                name: "HandlebarsRenderPlugin",
-                                stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE
-                            },
-                            (assets, done) => {
-                                compile(compilation, () => emitDependencies(compilation, done));
-                            }
-                        );
-                    }
-                });
-            } else {
-                // use standard compiler hooks
-                compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", compilation => {
-                    if (helperUtils.isWebpackV4(compilation)) {
-                        // @wp ^4.0.0
-                        compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
-                        compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
-                    } else {
-                        // @wp >= 5
-                        compilation.hooks.processAssets.tapAsync(
-                            {
-                                name: "HandlebarsRenderPlugin",
-                                stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
-                            },
-                            (assets, done) => {
-                                compile(compilation, () => emitDependencies(compilation, done));
-                            }
-                        );
-                    }
-                });
-            }
-        } else {
-            // @legacy wp < v4
-            compiler.plugin("make", compile);
-            compiler.plugin("emit", emitDependencies);
         }
+
+        // use standard compiler hooks
+        compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", compilation => {
+            compilation.hooks.processAssets.tapAsync(
+                {
+                    name: "HandlebarsRenderPlugin",
+                    stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+                },
+                (assets, done) => {
+                    compile(compilation, () => emitDependencies(compilation, done));
+                }
+            );
+        });
+    }
+
+    applyWebpackV4(compiler) {
+        // COMPILE TEMPLATES
+        const compile = (compilation, done) => {
+            try {
+                if (this.dependenciesUpdatedLegacy(compilation) === false) {
+                    return done();
+                }
+
+                this.loadPartials(); // Refresh partials
+                this.loadHelpers(); // Refresh helpers
+                this.compileAllEntryFiles(compilation, done); // build all html pages
+
+            } catch (error) {
+                compilation.errors.push(error);
+            }
+
+            return undefined; // done();?
+        };
+        // REGISTER FILE DEPENDENCIES TO WEBPACK
+        const emitDependencies = (compilation, done) => {
+            try {
+                // resolve file paths for webpack-dev-server
+                const resolvedDependencies = this.fileDependencies.map(file => path.resolve(file));
+                // register dependencies at webpack@4
+                resolvedDependencies.forEach(compilation.fileDependencies.add, compilation.fileDependencies);
+                // emit generated html pages (webpack-dev-server)
+                this.emitGeneratedFiles(compilation);
+                return done();
+
+            } catch (error) {
+                compilation.errors.push(error);
+            }
+
+            return undefined; // done();?
+        };
+
+        // @feature html-webpack-plugin
+        const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
+        if (enabled && HtmlWebpackPlugin) {
+            compiler.hooks.thisCompilation.tap("HtmlWebpackPluginHooks", compilation => {
+                // html-webpack-plugin >= 4
+                HtmlWebpackPlugin.getHooks(compilation).beforeEmit
+                    .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
+
+                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (_, done) => {
+                    compile(compilation, () => emitDependencies(compilation, done));
+                });
+            });
+            return;
+        }
+
+        // use standard compiler hooks
+        compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", compilation => {
+            compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
+            compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+        });
     }
 
     processHtml(data) {
