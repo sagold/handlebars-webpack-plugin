@@ -21,7 +21,7 @@
     "handlebars",
     "server"
   ],
-  "author": "Sascha Goldhofer <noreply@saschagoldhofer.de> (https://github.com/sagold/)",
+  "author": "Sascha Goldhofer <github@saschagoldhofer.de> (https://github.com/sagold/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/sagold/handlebars-webpack-plugin/issues"
@@ -48,8 +48,5 @@
       "test/**/*.test.js"
     ],
     "verbose": true
-  },
-  "peerDependencies": {
-    "html-webpack-plugin": "^4.4.1"
   }
 }
