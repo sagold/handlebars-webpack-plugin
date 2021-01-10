@@ -129,7 +129,7 @@ To change the partial's id you can pass a custom partial-generator to the plugin
 
 - the `HtmlWebpackPlugin` should be placed before the HandlebarsWebpackPlugin
 - multiple HtmlWebpackPlugins may be used
-- per default, the partials get registered to `html/<outputfilename>`, i.e. a filename `/dist/partials/head.hbs` will be registered as `html/head` to handlebars
+- per default, the partials get registered to `html/partials/<outputfilename>`, i.e. a filename `/dist/partials/head.hbs` will be registered as `html/partials/head` to handlebars
 
 
 ```js

@@ -3,6 +3,10 @@ const chalk = require("chalk");
 const log = require("./log");
 const path = require("path");
 
+function isWebpackV4(compilation) {
+    return typeof compilation.hooks.optimizeDependenciesBasic === "object" &&
+        compilation.hooks.optimizeDependenciesBasic !== null;
+}
 
 function getId(filepath) {
     const id = filepath.match(/\/([^/]*).js$/).pop();
@@ -62,6 +66,7 @@ function resolve(query) {
 
 
 module.exports = {
+    isWebpackV4,
     getId,
     register,
     unregister,

@@ -89,7 +89,6 @@ class HandlebarsPlugin {
 
         // COMPILE TEMPLATES
         const compile = (compilation, done) => {
-
             try {
                 // wp >= v5
                 if (compilation.fileTimestamps == null) {
@@ -136,7 +135,7 @@ class HandlebarsPlugin {
             const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
             // @feature html-webpack-plugin
             if (enabled && HtmlWebpackPlugin) {
-                compiler.hooks.compilation.tap("HtmlWebpackPluginHooks", compilation => {
+                compiler.hooks.thisCompilation.tap("HtmlWebpackPluginHooks", compilation => {
                     // html-webpack-plugin < 4
                     if (compilation.hooks.htmlWebpackPluginAfterHtmlProcessing) {
                         compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap(
@@ -149,16 +148,45 @@ class HandlebarsPlugin {
                         HtmlWebpackPlugin.getHooks(compilation).beforeEmit
                             .tapAsync("HandlebarsRenderPlugin", (data, cb) => cb(null, this.processHtml(data)));
                     }
-                });
 
-                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (compilation, done) => {
-                    compile(compilation, () => emitDependencies(compilation, done));
+                    if (helperUtils.isWebpackV4(compilation)) {
+                        // @wp ^4.0.0
+                        compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", (_, done) => {
+                            compile(compilation, () => emitDependencies(compilation, done));
+                        });
+                    } else {
+                        // @wp >= 5
+                        compilation.hooks.processAssets.tapAsync(
+                            {
+                                name: "HandlebarsRenderPlugin",
+                                stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE
+                            },
+                            (assets, done) => {
+                                compile(compilation, () => emitDependencies(compilation, done));
+                            }
+                        );
+                    }
                 });
-
             } else {
                 // use standard compiler hooks
-                compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
-                compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+                compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", compilation => {
+                    if (helperUtils.isWebpackV4(compilation)) {
+                        // @wp ^4.0.0
+                        compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
+                        compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
+                    } else {
+                        // @wp >= 5
+                        compilation.hooks.processAssets.tapAsync(
+                            {
+                                name: "HandlebarsRenderPlugin",
+                                stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+                            },
+                            (assets, done) => {
+                                compile(compilation, () => emitDependencies(compilation, done));
+                            }
+                        );
+                    }
+                });
             }
         } else {
             // @legacy wp < v4
