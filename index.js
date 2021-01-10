@@ -85,9 +85,7 @@ class HandlebarsPlugin {
      * @param  {Compiler} compiler
      */
     apply(compiler) {
-        let webpackMajorVersion = helperUtils.getWebpackMajorVersion(compiler);
-
-        if (webpackMajorVersion < 5) {
+        if (helperUtils.getWebpackMajorVersion(compiler) < 5) {
             this.applyWebpackV4(compiler);
             return;
         }
@@ -105,6 +103,8 @@ class HandlebarsPlugin {
             } catch (error) {
                 compilation.errors.push(error);
             }
+
+            return undefined; // consistent return;
         };
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
@@ -121,6 +121,8 @@ class HandlebarsPlugin {
             } catch (error) {
                 compilation.errors.push(error);
             }
+
+            return undefined; // consistent return;
         };
 
         const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
@@ -142,7 +144,6 @@ class HandlebarsPlugin {
                 );
             });
             return;
-
         }
 
         // use standard compiler hooks
@@ -173,6 +174,8 @@ class HandlebarsPlugin {
             } catch (error) {
                 compilation.errors.push(error);
             }
+
+            return undefined; // consistent return;
         };
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
@@ -189,6 +192,8 @@ class HandlebarsPlugin {
             } catch (error) {
                 compilation.errors.push(error);
             }
+
+            return undefined; // consistent return;
         };
 
         // @feature html-webpack-plugin
@@ -207,7 +212,7 @@ class HandlebarsPlugin {
         }
 
         // use standard compiler hooks
-        compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", compilation => {
+        compiler.hooks.thisCompilation.tap("HandlebarsRenderPlugin", () => {
             compiler.hooks.make.tapAsync("HandlebarsRenderPlugin", compile);
             compiler.hooks.emit.tapAsync("HandlebarsRenderPlugin", emitDependencies);
         });
