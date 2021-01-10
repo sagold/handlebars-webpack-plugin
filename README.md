@@ -277,7 +277,11 @@ For custom merge behaviour you can add your own merge-helper, following the impl
 
 <a href="https://github.com/JeremyTCD">
     <img width="80" height="80" style="max-width:100%;"
-        title="JeremyTCD" src="https://avatars0.githubusercontent.com/u/11733898?s=400&u=3494b06385965675883fa2f1efe03fc4eb8aa5bb&v=4">
+        title="JeremyTCD" src="https://avatars0.githubusercontent.com/u/11733898?s=400&v=4">
 </a>
 
+<a href="https://github.com/sw1tchdev">
+    <img width="80" height="80" style="max-width:100%;"
+        title="sw1tchdev" src="https://avatars0.githubusercontent.com/u/70477902?s=460&v=4">
+</a>
 
