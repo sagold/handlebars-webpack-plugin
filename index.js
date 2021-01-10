@@ -104,7 +104,7 @@ class HandlebarsPlugin {
                 compilation.errors.push(error);
             }
 
-            return undefined; // consistent return;
+            return undefined;
         };
 
         // REGISTER FILE DEPENDENCIES TO WEBPACK
@@ -113,16 +113,15 @@ class HandlebarsPlugin {
                 // resolve file paths for webpack-dev-server
                 const resolvedDependencies = this.fileDependencies.map(file => path.resolve(file));
                 // register dependencies at webpack
-                compilation.fileDependencies = compilation.fileDependencies.concat(resolvedDependencies);
+                compilation.fileDependencies.addAll(resolvedDependencies);
                 // emit generated html pages (webpack-dev-server)
                 this.emitGeneratedFiles(compilation);
-                return done();
 
             } catch (error) {
                 compilation.errors.push(error);
             }
 
-            return undefined; // consistent return;
+            return done();
         };
 
         const { enabled, HtmlWebpackPlugin } = this.options.htmlWebpackPlugin;
@@ -138,9 +137,7 @@ class HandlebarsPlugin {
                         name: "HandlebarsRenderPlugin",
                         stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE
                     },
-                    (assets, done) => {
-                        compile(compilation, () => emitDependencies(compilation, done));
-                    }
+                    (_, done) => compile(compilation, () => emitDependencies(compilation, done))
                 );
             });
             return;
@@ -153,9 +150,7 @@ class HandlebarsPlugin {
                     name: "HandlebarsRenderPlugin",
                     stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
                 },
-                (assets, done) => {
-                    compile(compilation, () => emitDependencies(compilation, done));
-                }
+                (_, done) => compile(compilation, () => emitDependencies(compilation, done))
             );
         });
     }
@@ -352,6 +347,8 @@ class HandlebarsPlugin {
         Object.keys(this.assetsToEmit).forEach(filename => {
             compilation.assets[filename] = this.assetsToEmit[filename];
         });
+
+        console.log("emit", this.assetsToEmit);
     }
 
     /**
