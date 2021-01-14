@@ -367,7 +367,7 @@ class HandlebarsPlugin {
      * @param  {String} outputPath  - webpack output path for build results
      * @param  {Object} compilation  - webpack compilation instance
      */
-    compileEntryFile(sourcePath, outputPath, compilation) {
+    async compileEntryFile (sourcePath, outputPath, compilation) {
         outputPath = sanitizePath(outputPath);
 
         let rootFolderName = path.dirname(sourcePath);
@@ -386,7 +386,14 @@ class HandlebarsPlugin {
         templateContent = this.options.onBeforeCompile(this.HB, templateContent) || templateContent;
         // create template
         const template = this.HB.compile(templateContent);
-        const data = this.options.onBeforeRender(this.HB, this.data, sourcePath) || this.data;
+        // cater for possible promises in onBeforeRender
+        const onBeforeRenderIsPromise = typeof this.options.onBeforeRender.then === 'function'
+        const onBeforeRender = this.options.onBeforeRender(this.HB, this.data, sourcePath)
+        const data = onBeforeRenderIsPromise 
+            ? await onBeforeRender
+            : onBeforeRender
+                ? onBeforeRender
+                : this.data
         // compile template
         let result = template(data);
         result = this.options.onBeforeSave(this.HB, result, targetFilepath) || result;
