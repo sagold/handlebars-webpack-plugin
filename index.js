@@ -385,7 +385,7 @@ class HandlebarsPlugin {
         let templateContent = this.readFile(sourcePath, "utf-8");
         templateContent = this.options.onBeforeCompile(this.HB, templateContent) || templateContent;
         // create template
-        const template = this.HB.compile(templateContent);
+        const template = this.HB.compile(templateContent, this.options.options);
         const data = this.options.onBeforeRender(this.HB, this.data, sourcePath) || this.data;
         // compile template
         let result = template(data);
