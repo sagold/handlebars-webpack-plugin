@@ -44,7 +44,7 @@ class HandlebarsPlugin {
 
         this.options.htmlWebpackPlugin = Object.assign({
             enabled: false,
-            prefix: "html",
+            prefix: undefined,
             HtmlWebpackPlugin: _HtmlWebpackPlugin
         }, htmlWebpackPluginOptions);
 
@@ -171,8 +171,9 @@ class HandlebarsPlugin {
         const { prefix } = this.options.htmlWebpackPlugin;
         // @todo used a new partial helper to check for an existing partial
         // @todo use generate id for consistent name replacements
+        const partialName = `${(prefix ? `${prefix}/` : '')}${this.options.getPartialId(sanitizePath(data.plugin.options.filename))}`
         this.HB.registerPartial(
-            `${prefix}/${sanitizePath(data.outputName.replace(/\.[^.]*$/, ""))}`,
+            partialName,
             data.html
         );
 

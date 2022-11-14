@@ -48,8 +48,5 @@
       "test/**/*.test.js"
     ],
     "verbose": true
-  },
-  "peerDependencies": {
-    "html-webpack-plugin": "^4.4.1"
   }
 }
